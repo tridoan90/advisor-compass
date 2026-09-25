@@ -185,6 +185,19 @@ textarea.ta:focus{box-shadow:inset 0 0 0 1px var(--whiskey),0 0 0 4px rgba(206,1
 .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;vertical-align:1px}
 .retire{border-radius:20px;padding:16px}
 .bars{display:grid;gap:10px;margin-top:4px}
+.retire .vitals{margin-bottom:12px}.retire .vital{box-shadow:inset 0 0 0 1px var(--line)}
+.rchart{width:100%;height:auto;display:block;margin-top:4px}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--mute);margin:4px 0 6px}.legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.rh{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600;margin:16px 0 8px}
+.lev{display:grid;grid-template-columns:1fr 70px 46px;gap:10px;align-items:center;font-size:13px;padding:5px 0}
+.lev .lt{height:6px;border-radius:4px;background:rgba(69,85,96,.10);overflow:hidden}.lev .lt i{display:block;height:100%;border-radius:4px}
+.lev b{text-align:right;font-weight:600}
+.kpis.rt{width:100%;border-collapse:collapse;font-size:13px}.kpis.rt td,.kpis.rt th{padding:8px 2px}
+.kpis.rt tr.sub td{color:var(--mute);font-size:12px;padding-left:12px}.kpis.rt tr.tot td{font-weight:600;border-top:1px solid var(--ink-2)}.kpis.rt tr.tot2 td{font-weight:600}
+details.rmore{margin-top:12px}details.rmore>summary{cursor:pointer;font-weight:600;font-size:13px;padding:8px 0;color:var(--ink-2)}
+.bk{display:flex;height:10px;border-radius:6px;overflow:hidden;background:rgba(69,85,96,.1)}.bk i{display:block;height:100%}
+.bkl{display:grid;gap:4px;margin-top:8px;font-size:12.5px}.bkl i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}.bkl b{float:right;font-weight:600}
+.vpf{display:flex;gap:8px;align-items:flex-start;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(237,27,46,.05);box-shadow:inset 0 0 0 1px rgba(237,27,46,.18);font-size:12.5px}.vpf svg{flex:none;margin-top:1px}
 .bars .row{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;font-size:12.5px;color:var(--ink-2)}
 .bars .row b{color:var(--ink);font-weight:600}
 .bars .track{height:10px;border-radius:6px;background:rgba(69,85,96,.10);overflow:hidden}
@@ -678,13 +691,18 @@ const STEPS = [
   {id:"invest", icon:"retire", pillar:"invest", vi:"Hưu trí & đầu tư", en:"Retirement & investing",
    svi:"Anh/chị muốn nghỉ hưu ở tuổi nào, và lúc đó muốn sống thế nào: tối giản, như bây giờ hay thoải mái hơn?",
    sen:"When would you like to retire, and how do you want to live then: simpler, as now, or more comfortably?",
-   wvi:"Nhu cầu hưu = % thu nhập hiện tại theo lối sống và phân khúc, trừ lương hưu BHXH và tiền thuê; quỹ cần có theo quy tắc rút 4%/năm.",
-   wen:"Retirement need = % of today's income by lifestyle and segment, less state pension and rent; required pot via the 4% rule.",
+   wvi:"Mô phỏng từng năm theo giá hôm nay: chi tiêu theo lối sống, y tế tăng nhanh hơn lạm phát, trừ BHXH, lương hưu vợ/chồng, tiền thuê; quỹ cần có đủ chi đến tuổi dự trù; danh mục giảm dần cổ phiếu khi gần hưu.",
+   wen:"Year-by-year model in today's money: lifestyle spending, healthcare rising faster than inflation, less state and partner pensions and rent; the pot must last to the planning age; equities taper as retirement nears.",
    fields:[
     {k:"bs",t:"bs"},
     {k:"retireAge",t:"num",vi:"Tuổi muốn nghỉ hưu",en:"Target retirement age",uvi:"tuổi",uen:"yrs"},
     {k:"retLife",t:"lifestyle",vi:"Lối sống khi nghỉ hưu",en:"Retirement lifestyle"},
-    {k:"bhxhYears",t:"num",vi:"Số năm đóng BHXH đến lúc nghỉ",en:"Years of social insurance at retirement",uvi:"năm",uen:"yrs",seg:["mass","massaff"],hvi:"Đủ 15 năm mới có lương hưu",hen:"Pension needs at least 15 years"},
+    {k:"retTarget",t:"num",vi:"Chi tiêu mong muốn khi hưu",en:"Target retirement spending",uvi:"tr ₫/tháng",uen:"VND m/mo",hvi:"Theo giá hôm nay; để trống sẽ theo lối sống",hen:"In today's money; blank uses the lifestyle level",sug:()=>{const c=eff(S.c); const I=n0(c.income)+n0(c.spouse)+n0(c.other); const t=RET_PCT[c.segment]||RET_PCT.massaff; return I? Math.round(I*t[LIFEI[c.retLife]??1]/100):null;}},
+    {k:"lifeExp",t:"num",vi:"Dự trù chi tiêu đến tuổi",en:"Plan spending to age",uvi:"tuổi",uen:"yrs",hvi:"Nên dự trù dài hơn tuổi thọ trung bình",hen:"Plan beyond average life expectancy"},
+    {k:"bhxhYears",t:"num",vi:"Số năm đóng BHXH đến lúc nghỉ",en:"Years of social insurance at retirement",uvi:"năm",uen:"yrs",when:c=>c.segment==="mass"||c.segment==="massaff"||c.work==="salaried",hvi:"Đủ 15 năm có lương hưu, nhận từ tuổi nghỉ hưu luật định",hen:"15 years earns a pension, paid from statutory retirement age"},
+    {k:"spousePension",t:"num",vi:"Lương hưu dự kiến của vợ/chồng",en:"Partner's expected pension",uvi:"tr ₫/tháng",uen:"VND m/mo",when:c=>n0(c.spouse)>0||c.family==="couple"||c.family==="kids",hvi:"Để 0 nếu không có",hen:"Leave 0 if none"},
+    {k:"retOther",t:"num",vi:"Thu nhập khác khi hưu",en:"Other retirement income",uvi:"tr ₫/tháng",uen:"VND m/mo",seg:["aff","hnw"],hvi:"Cổ tức doanh nghiệp, tiền thuê chưa khai",hen:"Business dividends, rent not listed above"},
+    {k:"retLump",t:"num",vi:"Khoản chi lớn sau hưu",en:"Large costs after retiring",uvi:"tr ₫",uen:"VND m",hvi:"Du lịch, cưới con, sửa nhà, xe",hen:"Travel, children's weddings, home repairs, car"},
     {k:"risk",t:"choice",vi:"Nếu danh mục giảm 20% trong một năm, anh/chị sẽ…",en:"If the portfolio fell 20% in a year, you would…",opts:[opt("conservative","Bán bớt để giữ an toàn","Sell to stay safe"),opt("balanced","Giữ nguyên, chờ hồi phục","Hold and wait"),opt("growth","Mua thêm","Buy more")]},
    ]},
   {id:"protect", icon:"protect", pillar:"protect", vi:"Bảo vệ", en:"Protect",
@@ -705,7 +723,7 @@ const STEPS = [
 const blankClient = () => ({id:null, segment:null, name:"", age:null, family:null, dependents:null, work:null, goals:[], holdings:[],
   income:null, spouse:null, other:null, stability:null, essential:null, lifestyle:null, budget:null, liquid:null, monthlySave:null, auto:null,
   debtPay:null, debtTotal:null, highInt:null, investable:null, pctCash:null, risk:null, retireAge:null, concentration:null,
-  lifeCover:null, ciCover:null, health:null, will:null, keyPerson:null, plan:null, onTime:null, credit:null, kids:[], parents:null, retLife:null, bhxhYears:null, notes:"", followUp:"", updatedAt:null});
+  lifeCover:null, ciCover:null, health:null, will:null, keyPerson:null, plan:null, onTime:null, credit:null, kids:[], parents:null, retLife:null, bhxhYears:null, retTarget:null, lifeExp:null, spousePension:null, retOther:null, retLump:null, notes:"", followUp:"", updatedAt:null});
 
 const DEMO = Object.assign(blankClient(), {id:"demo", demo:true, segment:"massaff", name:"Chị Lan", age:34, family:"kids", dependents:2, work:"salaried", goals:["home","education","retire"],
   income:35, spouse:20, other:0, stability:"stable", essential:25, lifestyle:14, budget:"partly", liquid:60, monthlySave:6, auto:"no",
@@ -915,16 +933,16 @@ function productCardHTML(p,have,fit){
 const DEFAULTS = {
   mass:   {age:28, family:"couple", dependents:1, work:"salaried", income:12, spouse:0, other:0, stability:"stable", essential:8, lifestyle:2.5, budget:"partly",
            liquid:15, monthlySave:1, auto:"no", debtPay:2, debtTotal:20, highInt:10, investable:30, pctCash:90, risk:"conservative", retireAge:60, concentration:0,
-           lifeCover:0, ciCover:0, health:"none", will:"no", parents:0, keyPerson:"no", plan:"no", onTime:"mostly", credit:"unknown", retLife:"current", bhxhYears:25},
+           lifeCover:0, ciCover:0, health:"none", will:"no", parents:0, keyPerson:"no", plan:"no", onTime:"mostly", credit:"unknown", retLife:"current", bhxhYears:25, lifeExp:85},
   massaff:{age:34, family:"kids", dependents:2, work:"salaried", income:30, spouse:15, other:0, stability:"stable", essential:22, lifestyle:10, budget:"partly",
            liquid:80, monthlySave:6, auto:"no", debtPay:10, debtTotal:500, highInt:20, investable:600, pctCash:75, risk:"balanced", retireAge:60, concentration:0,
-           lifeCover:500, ciCover:0, health:"basic", will:"no", parents:0, keyPerson:"no", plan:"partly", onTime:"always", credit:"good", retLife:"current", bhxhYears:25},
+           lifeCover:500, ciCover:0, health:"basic", will:"no", parents:0, keyPerson:"no", plan:"partly", onTime:"always", credit:"good", retLife:"current", bhxhYears:25, lifeExp:87},
   aff:    {age:40, family:"kids", dependents:3, work:"salaried", income:80, spouse:35, other:10, stability:"stable", essential:45, lifestyle:30, budget:"yes",
            liquid:400, monthlySave:25, auto:"no", debtPay:25, debtTotal:2500, highInt:0, investable:6000, pctCash:55, risk:"balanced", retireAge:58, concentration:45,
-           lifeCover:3000, ciCover:500, health:"basic", will:"no", parents:0, keyPerson:"no", plan:"partly", onTime:"always", credit:"good", retLife:"current", bhxhYears:0},
+           lifeCover:3000, ciCover:500, health:"basic", will:"no", parents:0, keyPerson:"no", plan:"partly", onTime:"always", credit:"good", retLife:"current", bhxhYears:20, lifeExp:88},
   hnw:    {age:47, family:"kids", dependents:3, work:"owner", income:250, spouse:60, other:80, stability:"variable", essential:90, lifestyle:90, budget:"yes",
            liquid:3000, monthlySave:100, auto:"yes", debtPay:60, debtTotal:8000, highInt:0, investable:60000, pctCash:40, risk:"growth", retireAge:60, concentration:60,
-           lifeCover:10000, ciCover:2000, health:"premium", will:"no", parents:0, keyPerson:"no", plan:"yes", onTime:"always", credit:"good", retLife:"current", bhxhYears:0},
+           lifeCover:10000, ciCover:2000, health:"premium", will:"no", parents:0, keyPerson:"no", plan:"yes", onTime:"always", credit:"good", retLife:"current", bhxhYears:0, lifeExp:90},
 };
 const RET_PCT={mass:[60,80,100],massaff:[50,70,90],aff:[40,55,70],hnw:[30,40,50]};
 const LIFEI={minimal:0,current:1,higher:2};
@@ -934,6 +952,23 @@ const NOM={dep:.055,bond:.07,gold:.05,eq:.10,re:.07}, INFL=.04;
 const MIX={conservative:{eq:.2,bond:.6,dep:.2},balanced:{eq:.5,bond:.4,dep:.1},growth:{eq:.8,bond:.15,dep:.05}};
 const mixNom=r=>{const x=MIX[r]||MIX.balanced; return x.eq*NOM.eq+x.bond*NOM.bond+x.dep*NOM.dep;};
 const realOf=n=>(1+n)/(1+INFL)-1;
+const PEN_AGE=62, MED_SHARE=.10, MED_REAL=.03, VPF_CAP=3;
+const glideEq=(r,yl)=>{ const e=(MIX[r]||MIX.balanced).eq, f=Math.max(.15,e-.35); return yl>=10? e : f+(e-f)*Math.max(0,yl)/10; };
+const nomEq=eq=>eq*NOM.eq+(1-eq)*(.8*NOM.bond+.2*NOM.dep);
+const taxMarg=(inc,deps)=>{ const t=inc-15.5-6.2*deps; return t<=0?0:t<=10?.05:t<=30?.1:t<=60?.2:t<=100?.3:.35; };
+/* retirement: annual simulation in today's money; accumulation on a glide path, drawdown to the planning age */
+function retSim(p){
+  const sh=p.shift||0, path=[]; let A=p.A, C=0, U=0;
+  for(let a=p.age;a<p.ret;a++){ const eq=glideEq(p.risk,p.ret-a), rc=realOf(nomEq(eq)+sh); path.push({a,b:A+C,eq});
+    A*=1+realOf(p.nowNom+sh); C=C*(1+rc)+p.save*12; U=U*(1+rc)+12; }
+  const atRet=A+C, eqR=glideEq(p.risk,0), rD=realOf(nomEq(eqR)+sh);
+  const draw=a=>{ const k=Math.max(0,a-p.ret), ph=a<75?1:a<85?.9:.8, med=p.base*MED_SHARE*Math.pow(1+MED_REAL,k), sp=p.base*(1-MED_SHARE)*ph+med;
+    const inc=p.inc.reduce((s,[v,f])=>s+(a>=f?v:0),0); return {sp,med,inc,net:Math.max(0,sp-inc)}; };
+  let need=p.lump||0, disc=1; for(let a=p.ret;a<p.life;a++){ need+=draw(a).net*12*disc; disc/=1+rD; }
+  let B=atRet-(p.lump||0), depl=null; const end=Math.min(100,p.life+5);
+  for(let a=p.ret;a<=100;a++){ if(a<=end) path.push({a,b:Math.max(0,B),eq:eqR,d:1}); if(a===100) break; B-=draw(a).net*12; if(B<0&&depl==null) depl=a; B*=1+rD; }
+  return {atRet, need, funded: need>0? atRet/need : 9, depl, U, rD, eqR, path, draw, base:p.base, ret:p.ret, life:p.life};
+}
 const EDU_PLANS=[opt("public","ĐH công lập","Public uni"),opt("private","ĐH tư thục","Private uni"),opt("intl","ĐH quốc tế tại VN","Intl uni in VN"),opt("abroad","Du học","Study abroad")];
 const EDU_COST={public:300,private:800,intl:1500,abroad:6000};
 const BS_DEF={
@@ -1205,17 +1240,33 @@ function analyse(c0){
   const bs=c.bs; const nowNom = bs? ((bs.bond*NOM.bond+bs.equity*NOM.eq+bs.gold*NOM.gold+(m.idle||0)*NOM.dep+bs.invest*mixNom(c.risk))/Math.max(1,n0(c.investable))) : (n0(c.pctCash)/100*(NOM.dep+NOM.gold)/2+(1-n0(c.pctCash)/100)*mixNom(c.risk));
   const rNow = realOf(nowNom);
   m.retireYears = years;
-  if(years>0 && c.work!=="retired"){
-    const tier=RET_PCT[c.segment]||RET_PCT.massaff; m.retPct=tier[LIFEI[c.retLife]??1]/100;
-    const by=n0(c.bhxhYears); m.pension=(c.segment==="mass"||c.segment==="massaff")&&by>=15? Math.min(.75,.45+.02*Math.max(0,by-20))*Math.min(46.8,.6*n0(c.income)) : 0;
-    m.rentInc = bs? bs.rent : 0;
-    m.retSpend=I*m.retPct; const gapM=Math.max(0,m.retSpend-m.pension-m.rentInc); m.corpus=gapM*12/0.04;
-    const fvA = Math.max(0,n0(c.investable)-(bs&&bs.loans.margin?bs.loans.margin.b:0))*Math.pow(1+rNow,years);
-    const fvC = rNew>0? save*12*((Math.pow(1+rNew,years)-1)/rNew) : save*12*years;
-    m.projected = fvA+fvC; m.retGap = Math.max(0,m.corpus-m.projected);
-    m.reqMonthly = m.retGap>0? m.retGap*rNew/(Math.pow(1+rNew,years)-1)/12 : 0;
-    if(m.retGap>0 && m.reqMonthly>=0.5){ const ratio=m.projected/Math.max(1,m.corpus);
-      add("invest", ratio<.4?"high":"medium",7,{t:"",f:"",a:"",s:[]}); }
+  { const tier=RET_PCT[c.segment]||RET_PCT.massaff; m.retPct=tier[LIFEI[c.retLife]??1]/100;
+    const retired = c.work==="retired" || years<=0, age=n0(c.age);
+    const by = c0.bhxhYears!=null&&c0.bhxhYears!==""? n0(c0.bhxhYears) : (c.work==="self"||c.work==="owner"||c.work==="retired"? 0 : n0(c.bhxhYears));
+    m.bhxhYrs=by; m.pension = !retired&&by>=15? Math.min(.75,.45+.02*Math.max(0,by-20))*Math.min(46.8,.6*n0(c.income)) : 0;
+    m.rentInc = bs? bs.rent : 0; m.spPension=n0(c.spousePension); m.retOther=n0(c.retOther);
+    const A=Math.max(0,n0(c.investable)-(bs&&bs.loans.margin?bs.loans.margin.b:0));
+    if(age>0 && !retired){
+      const ret=n0(c.retireAge), life=Math.max(ret+10,n0(c.lifeExp)||ret+25), pAge=Math.max(ret,PEN_AGE);
+      m.retSpend = n0(c.retTarget)>0? n0(c.retTarget) : I*m.retPct; m.retCustom=n0(c.retTarget)>0;
+      const inc=[[m.pension,pAge],[m.spPension,pAge],[m.rentInc,ret],[m.retOther,ret]].filter(x=>x[0]>0);
+      const P0={age,ret,life,A,nowNom,save,risk:c.risk,base:m.retSpend,inc,lump:n0(c.retLump)};
+      const b=retSim(P0), cons=retSim({...P0,shift:-.02,life:life+5}), opt=retSim({...P0,shift:.015});
+      m.corpus=b.need; m.projected=b.atRet; m.retGap=Math.max(0,b.need-b.atRet);
+      m.reqMonthly = m.retGap>0&&b.U>0? m.retGap/b.U : 0;
+      const later=retSim({...P0,ret:ret+2,inc:inc.map(([v,f])=>[v,Math.max(f,ret+2)]),life:Math.max(ret+12,life)});
+      const minimal = !m.retCustom && c.retLife!=="minimal"? retSim({...P0,base:I*tier[0]/100}) : null;
+      const extra = m.retGap>0? Math.max(1,Math.round(Math.min(m.reqMonthly,Math.max(1,m.free*.5)))) : 0;
+      const onTrack = m.reqMonthly>0? retSim({...P0,save:save+m.reqMonthly}) : b;
+      const marg=taxMarg(n0(c.income),n0(c.dependents));
+      m.rp={retired:false, b, cons, opt, later, minimal, extra, extraFunded: extra? (b.atRet+extra*b.U)/b.need : null, onTrack, inc, pAge, life, ret, marg, vpfTax: marg*VPF_CAP*12, inflF:Math.pow(1+INFL,years)};
+      if(m.retGap>0 && m.reqMonthly>=0.5) add("invest", b.funded<.4?"high":"medium",7,{t:"",f:"",a:"",s:[]});
+    } else if(age>0 && A>0){
+      const life=Math.max(age+10,n0(c.lifeExp)||90), spend=n0(c.retTarget)>0? n0(c.retTarget) : exp;
+      const b=retSim({age,ret:age,life,A,nowNom,save:0,risk:c.risk||"conservative",base:spend,inc:[[I,age]],lump:n0(c.retLump)});
+      let pv=0,d=1; for(let a=age;a<life;a++){ pv+=12*d; d/=1+b.rD; }
+      m.rp={retired:true, b, life, sustain: Math.max(0,(A-n0(c.retLump))/Math.max(1,pv)), netDraw: b.draw(age).net};
+    }
   }
   if((years<=7 || c.work==="retired") && n0(c.age)>=50 && n0(c.investable)>=I*24){ m.incomeInv=n0(c.investable);
     add("invest","medium",6.8,{t:L("Thiết kế dòng thu nhập hưu trí","Retirement income design"),
@@ -1306,7 +1357,8 @@ function insightHTML(st){
     spend:[L("Tỷ lệ chi ra / thu vào","Outflow / income"), pct((m.exp+m.pay)/m.I), L("Chuẩn khoẻ mạnh ≤ 80% (gồm trả nợ).","Healthy is ≤ 80% including debt payments."), L("“Khoản chi nào anh/chị thấy đáng giá nhất, khoản nào có thể cắt mà không tiếc?”","“Which spending feels most worth it, and what could go without regret?”"), (m.exp+m.pay)/m.I<=.8],
     save:[L("Quỹ dự phòng","Emergency fund"), fmtMo(m.efMonths)+L(" tháng"," months"), L(`Mục tiêu ${m.efTarget} tháng chi phí thiết yếu + trả nợ.`,`Target ${m.efTarget} months of essentials plus debt payments.`), L("“Lần gần nhất có khoản chi bất ngờ, anh/chị đã xoay xở thế nào?”","“Last time an unexpected bill came up, how did you handle it?”"), m.efMonths>=m.efTarget],
     borrow:[L("Tỷ lệ trả nợ (DSR)","Debt service (DSR)"), pct(m.dsr), L("Chuẩn ≤ 35%; nợ lãi cao cần xử lý trước.","Keep ≤ 35%; clear high-interest debt first."), L("“Khoản vay nào đang làm anh/chị bận tâm nhất?”","“Which loan worries you the most?”"), m.dsr<=.35 && !n0(ce.highInt)],
-    invest:[L("Chỉ số tích luỹ tài sản","Wealth accumulation index"), fmtD(fh.wi,2)+"×", L(`${L(wealthBand(fh.wi).vi,wealthBand(fh.wi).en)} · chuẩn = tuổi × thu nhập năm ÷ 10.`,`${wealthBand(fh.wi).en} · benchmark = age × annual income ÷ 10.`), L("“Anh/chị hình dung cuộc sống lúc nghỉ hưu ra sao, cần khoảng bao nhiêu mỗi tháng?”","“What does retirement look like for you, and what would it cost each month?”"), fh.wi>=1],
+    invest: m.rp&&!m.rp.retired? [L("Mức sẵn sàng hưu trí","Retirement readiness"), pct(Math.min(9.99,m.rp.b.funded)), L(`Cần ${fmtM(m.corpus)} lúc ${m.rp.ret} tuổi, dự phóng ${fmtM(m.projected)}${m.rp.b.depl?`, đủ chi đến ${m.rp.b.depl} tuổi`:""}.`,`Needs ${fmtM(m.corpus)} at ${m.rp.ret}, projected ${fmtM(m.projected)}${m.rp.b.depl?`, lasting to age ${m.rp.b.depl}`:""}.`), L("“Một ngày bình thường khi nghỉ hưu của anh/chị trông thế nào, và ai sẽ chăm sóc khi về già?”","“What does an ordinary retirement day look like, and who will care for you later on?”"), m.rp.b.funded>=1] :
+    [L("Chỉ số tích luỹ tài sản","Wealth accumulation index"), fmtD(fh.wi,2)+"×", L(`${L(wealthBand(fh.wi).vi,wealthBand(fh.wi).en)} · chuẩn = tuổi × thu nhập năm ÷ 10.`,`${wealthBand(fh.wi).en} · benchmark = age × annual income ÷ 10.`), L("“Anh/chị hình dung cuộc sống lúc nghỉ hưu ra sao, cần khoảng bao nhiêu mỗi tháng?”","“What does retirement look like for you, and what would it cost each month?”"), fh.wi>=1],
     protect:[L("Mức bảo vệ nhân thọ","Life cover vs need"), pct(Math.min(9.99,n0(ce.lifeCover)/Math.max(1,m.lifeNeed))), L(`Nhu cầu ≈ ${fmtM(m.lifeNeed)}: chi tiêu gia đình đến khi con tự lập, cộng nợ và học phí, trừ tài sản sẵn có.`,`Need ≈ ${fmtM(m.lifeNeed)}: family spending until the children are independent, plus debts and school fees, less existing assets.`), L("“Nếu chuyện không may xảy ra, anh/chị muốn các con vẫn giữ được điều gì?”","“If the worst happened, what would you want the children to keep?”"), m.lifeGap<=0],
   }[st.pillar];
   if(!I) return "";
@@ -1369,7 +1421,7 @@ function shortCopy(n,c,m,seg){
    "protect:5.5": [T("Thiếu bảo hiểm bệnh hiểm nghèo","Critical illness gap"), `${fmtM(c.ciCover)} / ${T("cần","need")} ${fmtM(m.ciNeed)}`, T("Thêm quyền lợi bệnh hiểm nghèo.","Add critical illness cover.")],
    "protect:9": [T("Chưa có di chúc","No will yet"), T("Dễ tranh chấp, chậm chuyển giao","Risk of disputes and delays"), T("Lập di chúc, chỉ định người thụ hưởng.","Make a will, name beneficiaries.")],
    "protect:8.5": [T("Doanh nghiệp chưa được bảo vệ","Business unprotected"), T("Cả nhà phụ thuộc một người chủ","Family relies on one owner"), T("Bảo hiểm người chủ chốt + kế nhiệm.","Key-person cover + succession.")],
-   "invest:7": [T("Quỹ hưu trí thiếu","Retirement gap"), `${fmtM(m.projected)} / ${T("cần","need")} ${fmtM(m.corpus)}`, m.retireYears<=5? T("Lùi tuổi hưu 2–3 năm hoặc chọn mức sống Tối giản.","Retire 2–3 years later or choose the Essential lifestyle.") : m.reqMonthly<=m.free+0.5? T(`Đầu tư thêm ${fmtM(m.reqMonthly)}/tháng.`,`Invest ${fmtM(m.reqMonthly)} more a month.`) : T(`Cần ${fmtM(m.reqMonthly)}/tháng, đang dư ${fmtM(m.free)}: bắt đầu với ${fmtM(Math.max(1,Math.round(m.free*.5)))}, lùi tuổi hưu hoặc giảm mục tiêu.`,`Needs ${fmtM(m.reqMonthly)}/month, only ${fmtM(m.free)} free: start with ${fmtM(Math.max(1,Math.round(m.free*.5)))}, retire later or trim the goal.`)],
+   "invest:7": [T("Quỹ hưu trí thiếu","Retirement gap"), `${T("Đạt","Funded")} ${pct(Math.min(9.99,m.projected/Math.max(1,m.corpus)))} · ${m.rp&&m.rp.b.depl? T(`đủ chi đến ${m.rp.b.depl} tuổi`,`lasts to age ${m.rp.b.depl}`) : `${fmtM(m.projected)} / ${fmtM(m.corpus)}`}`, m.retireYears<=5? T("Lùi tuổi hưu 2–3 năm hoặc chọn mức sống Tối giản.","Retire 2–3 years later or choose the Essential lifestyle.") : m.reqMonthly<=m.free+0.5? T(`Đầu tư thêm ${fmtM(m.reqMonthly)}/tháng.`,`Invest ${fmtM(m.reqMonthly)} more a month.`) : T(`Cần ${fmtM(m.reqMonthly)}/tháng, đang dư ${fmtM(m.free)}: bắt đầu với ${fmtM(Math.max(1,Math.round(m.free*.5)))}, lùi tuổi hưu hoặc giảm mục tiêu.`,`Needs ${fmtM(m.reqMonthly)}/month, only ${fmtM(m.free)} free: start with ${fmtM(Math.max(1,Math.round(m.free*.5)))}, retire later or trim the goal.`)],
    "invest:7.2": [T("Quỹ đại học cho con","University fund"), `${m.eduKids} ${T("con","child(ren)")} · ${T("cần","need")} ${fmtM(m.eduCost)}`, m.eduMonthly<=m.free+0.5? T(`Để riêng ${fmtM(m.eduMonthly)}/tháng.`,`Set aside ${fmtM(m.eduMonthly)} a month.`) : m.eduFromAssets? T(`Tách ${fmtM(m.eduLump)} từ tài sản hiện có vào quỹ riêng cho con.`,`Ring-fence ${fmtM(m.eduLump)} of existing assets for the children.`) : T(`Kết hợp góp tháng và một khoản từ tài sản sẵn có.`,`Combine monthly saving with a lump sum from existing assets.`)],
    "invest:8": [T("Tiền nằm im quá nhiều","Too much idle cash"), `${c.pctCash}% ${c.bs&&!c.bs.gold? T("ở tiền gửi","in deposits") : T("ở tiết kiệm, vàng","in deposits, gold")}`, T("Chuyển dần sang quỹ trong 6–12 tháng.","Phase into funds over 6–12 months.")],
    "invest:8.2": [T("Dồn trứng một giỏ","Eggs in one basket"), `${c.concentration}% ${T("vào 1 tài sản","in one asset")} / ≤ 25%`, T("Giảm dần theo lộ trình.","Reduce on a schedule.")],
@@ -1429,7 +1481,7 @@ async function deleteClient(){
 
 /* ---------------- rendering ---------------- */
 const app=document.getElementById("app"), bar=document.getElementById("bar");
-const visibleFields = st => { const w=eff(S.c).work; return (st.fields||[]).filter(f=>(!f.seg||f.seg.includes(S.c.segment))&&(!f.work||f.work.includes(w))); };
+const visibleFields = st => { const ce=eff(S.c), w=ce.work; return (st.fields||[]).filter(f=>(!f.seg||f.seg.includes(S.c.segment))&&(!f.work||f.work.includes(w))&&(!f.when||f.when(ce))); };
 
 function topbar(){
   const back = S.view!=="home"? `<button class="iconbtn" data-a="back" aria-label="${L("Quay lại","Back")}">${I.back}</button>`:"";
@@ -1471,7 +1523,7 @@ function viewSegment(){
 function progress(){ return `<div class="prog" aria-hidden="true">${STEPS.map((s,i)=>`<i class="${i<S.step?"done":i===S.step?"on":""}"></i>`).join("")}</div>`; }
 
 function fieldHTML(f){
-  const v=S.c[f.k]; const d=(DEFAULTS[S.c.segment]||{})[f.k] ?? (BS_DEF[S.c.segment]||{})[f.k]; const lab=L(f.vi,f.en); const id="f-"+f.k;
+  const v=S.c[f.k]; const d=f.sug? f.sug() : (DEFAULTS[S.c.segment]||{})[f.k] ?? (BS_DEF[S.c.segment]||{})[f.k]; const lab=L(f.vi,f.en); const id="f-"+f.k;
   const hint=f.hvi?`<div class="hint">${esc(L(f.hvi,f.hen))}</div>`:"";
   const isM = f.uvi && /tr ₫/.test(f.uvi);
   if(f.t==="num"||f.t==="text"){
@@ -1589,6 +1641,7 @@ function viewProposal(){
    <h2>${L("3 đề xuất ưu tiên","Three priority recommendations")}</h2>
    <table class="ptab"><thead><tr><th></th><th>${L("Nhu cầu","Need")}</th><th>${L("Giải pháp","Solution")}</th><th>${L("Quy mô","Size")}</th></tr></thead><tbody>${rows}</tbody></table>
    <div class="kv tot"><span>${L("Ngân sách hằng tháng ước tính","Estimated monthly budget")}</span><b class="num">${fmtM1(moTotal)}</b><span>${L("Dòng tiền còn dư hiện nay","Current monthly surplus")}</span><b class="num">${fmtM1(m.free)}</b></div>
+   ${m.rp&&!m.rp.retired?`<h2>${L("Hưu trí","Retirement")}</h2><div class="kv"><span>${L("Chi tiêu mục tiêu","Target spending")}</span><b class="num">${fmtM1(m.retSpend)}/${L("tháng","mo")} · ${m.rp.ret} ${L("tuổi","yrs")}</b><span>${L("Quỹ cần có","Pot needed")}</span><b class="num">${fmtM(m.corpus)}</b><span>${L("Dự phóng","Projected")}</span><b class="num">${fmtM(m.projected)} · ${pct(Math.min(9.99,m.rp.b.funded))}</b>${m.reqMonthly>0?`<span>${L("Cần góp thêm","Extra needed")}</span><b class="num">${fmtM1(m.reqMonthly)}/${L("tháng","mo")}</b>`:""}</div>`:""}
    ${moTotal>m.free+0.5?`<p class="warnl">${L("Ngân sách vượt dòng tiền dư: thực hiện theo thứ tự ưu tiên, bắt đầu từ mục 1.","Budget exceeds the surplus: act in priority order, starting with item 1.")}</p>`:""}
    <p class="small">${L("Giả định: lạm phát 4%/năm; lợi suất danh nghĩa tiền gửi 5,5%, trái phiếu 7%, cổ phiếu 10%; phí bảo hiểm là ước tính, phí thực tế theo thẩm định của công ty bảo hiểm.","Assumptions: 4% inflation; nominal returns of 5.5% deposits, 7% bonds, 10% equities; premiums are estimates, final pricing depends on underwriting.")}${r.assumed.length?" "+L(`${r.assumed.length} số liệu là giả định theo phân khúc.`,`${r.assumed.length} inputs are segment assumptions.`):""}</p>
    <label class="consent"><input type="checkbox" data-k="consent" ${c.consent?"checked":""}> <span>${L("Khách hàng xác nhận thông tin đã cung cấp là chính xác, đã được giải thích rủi ro và đồng ý nhận tư vấn các giải pháp trên.","The client confirms the information given is accurate, has had the risks explained and agrees to receive advice on the solutions above.")}</span></label>
@@ -1601,13 +1654,7 @@ function viewReport(){
   const t=tierOf(r.overall); const pj=projectPlan(c,r); const upm=new Map(r.needs.map(n=>[n,upliftOf(n,c,r.overall)]));
   const row=(lab,val,bench,ok)=>`<tr><td><span class="dot" style="background:${ok?"var(--ok)":"var(--hi)"}"></span>${lab}</td><td class="v num">${val}</td><td class="b num">${bench}</td></tr>`;
   const goalsTxt=(c.goals||[]).map(g=>{const o=GOALS.find(x=>x.v===g);return o?L(o.vi,o.en):g;}).join(" · ");
-  let retire="";
-  if(m.retSpend){ const mx=Math.max(1,m.corpus,m.projected); const w=v=>Math.max(2,Math.round(v/mx*100));
-    retire=`<div class="sec"><h2>${Ii("retire",16)}${L("Hưu trí","Retirement")}</h2><span class="eyebrow">${L("Theo giá hôm nay","Today's money")}</span></div>
-    <div class="retire"><div class="bars">
-      <div class="row"><span>${L("Cần có","Needed")}</span><span class="track"><span class="fill" style="display:block;width:${w(m.corpus)}%;background:linear-gradient(90deg,var(--riverbed),var(--riverbed-hi))"></span></span><b class="num">${fmtM(m.corpus)}</b></div>
-      <div class="row"><span>${L("Dự phóng","Projected")}</span><span class="track"><span class="fill" style="display:block;width:${w(m.projected)}%;background:${m.retGap>0?"linear-gradient(90deg,var(--crimson-lo),var(--crimson-hi))":"var(--ok)"};box-shadow:0 0 10px rgba(237,27,46,.5)"></span></span><b class="num">${fmtM(m.projected)}</b></div></div>
-      <p class="note" style="margin-top:10px">${L(`Chi hưu ${Math.round((m.retPct||.7)*100)}% thu nhập (${fmtM(m.retSpend||0)}/tháng)${m.pension?` · BHXH ${fmtM(m.pension)}`:""}${m.rentInc?` · thuê ${fmtM(m.rentInc)}`:""} · rút 4%/năm · lợi suất danh nghĩa theo lớp tài sản, lạm phát 4%.`,`Retirement spend ${Math.round((m.retPct||.7)*100)}% of income (${fmtM(m.retSpend||0)}/mo)${m.pension?` · pension ${fmtM(m.pension)}`:""}${m.rentInc?` · rent ${fmtM(m.rentInc)}`:""} · 4% withdrawal · nominal returns by asset class, 4% inflation.`)}</p></div>`; }
+  const retire=retireHTML(r);
   const needCard=(n,i)=>`<article class="need ${n.sev}"><div class="nh"><span class="rank">${Ii(PIL_IC[n.pillar]||"plan",20)}<sup class="num">${i+1}</sup></span><div style="flex:1">
       <h3>${esc(n.t)}</h3><div class="pmeta"><span class="sev ${n.sev}">${sevLabel(n.sev)}</span><span class="tag">${pName(n.pillar)}</span>${upm.get(n)>0?`<span class="tag up">+${upm.get(n)} BMI</span>`:""}</div></div></div>
       <div class="nf"><span class="num">${esc(n.f)}</span></div><p class="act">${esc(n.a)}</p>${n.ask?`<div class="ask">${Ii("tag",14)}<span class="num">${esc(n.ask.t)}</span></div>`:""}
@@ -1631,6 +1678,7 @@ function viewReport(){
   ${closeHTML(r,c)}
   <div class="sec"><h2>${Ii("route",16)}${L("Lộ trình hành động","Action plan")}</h2><span class="eyebrow">${L("3 việc ưu tiên","Top 3 priorities")}</span></div>
   ${needs}
+  ${retire}
   <div class="sec"><h2>${Ii("pulse",16)}${L("Chẩn đoán chi tiết","Full diagnosis")}</h2></div>
   ${bsHTML()}
   <div class="vitals">
@@ -1651,7 +1699,6 @@ function viewReport(){
    ${row(L("Tài sản đầu tư / thu nhập năm","Investable / annual income"),fmtD(m.multiple)+"×","≈ "+fmtD(m.multBench)+"×",m.multiple>=m.multBench*.6)}
    ${row(L("Bảo hiểm nhân thọ","Life cover"),fmtM(ce.lifeCover),fmtM(m.lifeNeed),m.lifeGap<=0)}
   </tbody></table></div>
-  ${retire}
   <div class="sec"><h2>${Ii("note",16)}${L("Ghi chú & hẹn gặp lại","Notes & follow-up")}</h2></div>
   <div class="fields"><div class="field"><label for="f-followUp">${L("Ngày hẹn rà soát","Review date")}</label><div class="inwrap"><input id="f-followUp" type="date" data-k="followUp" value="${esc(c.followUp||"")}"></div></div>
    <div class="field"><label for="f-notes">${L("Ghi chú buổi tư vấn","Session notes")}</label><textarea id="f-notes" class="ta" data-k="notes">${esc(c.notes||"")}</textarea></div></div>
@@ -1659,6 +1706,83 @@ function viewReport(){
    ${c.id&&!c.demo? (S.confirmDel? `<span class="confirm">${L("Xoá hồ sơ này?","Delete this client?")} <button class="btn btn-sm" style="background:var(--crit);color:#fff" data-a="del-yes">${L("Xoá","Delete")}</button><button class="btn btn-ghost btn-sm" data-a="del-no">${L("Huỷ","Cancel")}</button></span>` : `<button class="btn btn-ghost btn-sm" data-a="del">${L("Xoá hồ sơ","Delete client")}</button>`):""}</div>
   <p class="disc">${L("Kết quả tham khảo từ thông tin khách cung cấp, không phải cam kết lợi nhuận. Thông tin sản phẩm lấy từ nguồn công khai tại thời điểm cập nhật; hiệu suất quá khứ không đảm bảo kết quả tương lai. Chỉ giới thiệu sản phẩm thuộc phạm vi được phép phân phối và sau khi đánh giá mức độ phù hợp.","Indicative, based on client inputs; not a return guarantee. Product data from public sources at the time of update; past performance does not guarantee future results. Recommend only products you are licensed to distribute, after a suitability check.")}</p>
   </main>`;
+}
+
+function retChart(rp){
+  const S1=rp.b.path, lo=rp.cons.path, hi=rp.opt.path; const a0=S1[0].a, a1=S1[S1.length-1].a;
+  const W=340,H=170,pl=6,pr=6,pt=14,pb=22; const mx=Math.max(1,rp.b.need,...S1.map(p=>p.b),...hi.filter(p=>p.a<=a1).map(p=>p.b))*1.08;
+  const X=a=>pl+(a-a0)/Math.max(1,a1-a0)*(W-pl-pr), Y=v=>pt+(1-Math.min(v,mx)/mx)*(H-pt-pb);
+  const line=P=>P.filter(p=>p.a<=a1).map((p,i)=>(i?"L":"M")+X(p.a).toFixed(1)+" "+Y(p.b).toFixed(1)).join(" ");
+  const hiP=hi.filter(p=>p.a<=a1), loP=lo.filter(p=>p.a<=a1);
+  const band=hiP.map((p,i)=>(i?"L":"M")+X(p.a).toFixed(1)+" "+Y(p.b).toFixed(1)).join(" ")+" "+loP.slice().reverse().map(p=>"L"+X(p.a).toFixed(1)+" "+Y(p.b).toFixed(1)).join(" ")+"Z";
+  const xr=X(rp.ret), yn=Y(rp.b.need), xl=X(Math.min(rp.life,a1));
+  const ticks=[]; for(let a=Math.ceil(a0/10)*10;a<=a1;a+=10) ticks.push(a);
+  return `<svg class="rchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("Diễn biến quỹ hưu trí","Retirement pot over time")}">
+   <path d="${band}" fill="rgba(69,85,96,.10)"/>
+   <line x1="${xr}" y1="${pt-6}" x2="${xr}" y2="${H-pb}" stroke="var(--whiskey)" stroke-dasharray="3 3"/>
+   <line x1="${xl}" y1="${pt}" x2="${xl}" y2="${H-pb}" stroke="var(--line)" stroke-dasharray="2 3"/>
+   <line x1="${xr-18}" y1="${yn}" x2="${xr+18}" y2="${yn}" stroke="var(--riverbed)" stroke-width="2"/>
+   <path d="${line(S1)}" fill="none" stroke="#ED1B2E" stroke-width="2.2" stroke-linejoin="round"/>
+   <circle cx="${xr}" cy="${Y(rp.b.atRet)}" r="3.5" fill="#fff" stroke="#ED1B2E" stroke-width="2"/>
+   <text x="${Math.min(xr+22,W-60)}" y="${Math.max(10,yn-4)}" font-size="9.5" fill="var(--riverbed)" font-weight="600">${L("Cần","Need")} ${fmtM(rp.b.need)}</text>
+   <text x="${xr}" y="${pt-8}" font-size="9" fill="var(--whiskey)" text-anchor="middle">${L("Hưu","Retire")} ${rp.ret}</text>
+   ${ticks.map(a=>`<text x="${X(a)}" y="${H-6}" font-size="9" fill="var(--mute)" text-anchor="middle">${a}</text>`).join("")}
+   ${rp.b.depl&&rp.b.depl<=a1?`<circle cx="${X(rp.b.depl)}" cy="${H-pb}" r="3" fill="#ED1B2E"/>`:""}
+  </svg><div class="legend"><span><i style="background:#ED1B2E"></i>${L("Cơ sở","Base")}</span><span><i style="background:rgba(69,85,96,.25)"></i>${L("Thận trọng – thuận lợi","Cautious to favourable")}</span><span><i style="background:var(--riverbed)"></i>${L("Quỹ cần có","Pot needed")}</span></div>`;
+}
+function retireHTML(r){
+  const m=r.m, rp=m.rp, ce=r.ce; if(!rp) return "";
+  const head=`<div class="sec"><h2>${Ii("retire",16)}${L("Kế hoạch hưu trí","Retirement plan")}</h2><span class="eyebrow">${L("Theo giá hôm nay","Today's money")}</span></div>`;
+  const col=f=>sevColor(f>=1?"ok":f>=.7?"medium":f>=.4?"high":"critical");
+  const lastTo=b=>b.depl? `${b.depl} ${L("tuổi","yrs")}` : "100+";
+  if(rp.retired){ const b=rp.b;
+    return head+`<div class="vitals"><div class="vital"><span class="eyebrow">${L("Quỹ hiện có","Pot today")}</span><b class="num">${fmtM(b.atRet)}</b></div>
+     <div class="vital"><span class="eyebrow">${L("Rút ròng","Net draw")}</span><b class="num">${fmtM1(rp.netDraw)}</b><span>${L("mỗi tháng","a month")}</span></div>
+     <div class="vital"><span class="eyebrow">${L("Đủ chi đến","Lasts to")}</span><b class="num" style="color:${col(b.depl&&b.depl<rp.life?.5:1)}">${lastTo(b)}</b><small>${L("Dự trù","Plan")} ${rp.life}</small></div></div>
+     <p class="note" style="margin-top:8px">${L(`Mức rút bền vững đến ${rp.life} tuổi ~${fmtM1(rp.sustain)}/tháng ngoài thu nhập hiện có.`,`Sustainable draw to age ${rp.life}: ~${fmtM1(rp.sustain)}/month on top of current income.`)}</p>`; }
+  const b=rp.b, d0=b.draw(rp.ret), fundedTxt=pct(Math.min(9.99,b.funded));
+  const tr=(l,v,cls)=>`<tr${cls?` class="${cls}"`:""}><td>${l}</td><td class="v num">${v}</td></tr>`;
+  const flows=[tr(L("Chi tiêu","Spending"),fmtM1(d0.sp)),tr(L("trong đó y tế","of which healthcare"),fmtM1(d0.med),"sub")]
+    .concat(m.pension?[tr(L(`BHXH (${m.bhxhYrs} năm, từ ${rp.pAge} tuổi)`,`State pension (${m.bhxhYrs} yrs, from ${rp.pAge})`),"− "+fmtM1(m.pension))]:[])
+    .concat(m.spPension?[tr(L("Lương hưu vợ/chồng","Partner's pension"),"− "+fmtM1(m.spPension))]:[])
+    .concat(m.rentInc?[tr(L("Tiền thuê","Rent"),"− "+fmtM1(m.rentInc))]:[])
+    .concat(m.retOther?[tr(L("Thu nhập khác","Other income"),"− "+fmtM1(m.retOther))]:[])
+    .concat(rp.pAge>rp.ret&&(m.pension||m.spPension)? [tr(L(`Rút từ quỹ đến ${rp.pAge} tuổi`,`Drawn from the pot until ${rp.pAge}`),fmtM1(d0.net),"tot"),tr(L(`Từ ${rp.pAge} tuổi, khi có lương hưu`,`From ${rp.pAge}, once pensions start`),fmtM1(b.draw(rp.pAge).net),"tot2")] : [tr(L("Rút từ quỹ","Drawn from the pot"),fmtM1(d0.net),"tot")]).join("");
+  const sc=[[L("Thận trọng","Cautious"),rp.cons],[L("Cơ sở","Base"),b],[L("Thuận lợi","Favourable"),rp.opt]]
+    .map(([l,x])=>`<tr><td>${l}</td><td class="v num">${fmtM(x.atRet)}</td><td class="v num" style="color:${col(x.funded)}">${pct(Math.min(9.99,x.funded))}</td><td class="v num">${lastTo(x)}</td></tr>`).join("");
+  const lev=[]; if(rp.extra) lev.push([L(`Góp thêm ${fmtM1(rp.extra)}/tháng`,`Add ${fmtM1(rp.extra)} a month`),rp.extraFunded]);
+  lev.push([L("Nghỉ hưu muộn 2 năm","Retire 2 years later"),rp.later.funded]);
+  if(rp.minimal) lev.push([L("Chi tiêu mức Tối giản","Essential lifestyle"),rp.minimal.funded]);
+  if(m.reqMonthly>0) lev.push([L(`Góp đủ ${fmtM1(m.reqMonthly)}/tháng`,`Invest the full ${fmtM1(m.reqMonthly)} a month`),1]);
+  const levH=lev.map(([l,f])=>`<div class="lev"><span>${l}</span><span class="lt"><i style="width:${Math.min(100,Math.round(f*100))}%;background:${col(f)}"></i></span><b class="num" style="color:${col(f)}">${pct(Math.min(9.99,f))}</b></div>`).join("");
+  const ms=[]; const byA=new Map(b.path.map(p=>[p.a,p])), onA=new Map(rp.onTrack.path.map(p=>[p.a,p]));
+  for(let a=Math.ceil((n0(ce.age)+1)/5)*5;a<rp.ret;a+=5) ms.push(a); ms.push(rp.ret);
+  const msRows=ms.map(a=>{ const p=a===rp.ret?{b:b.atRet,eq:b.eqR}:byA.get(a), q=a===rp.ret?{b:rp.onTrack.atRet}:onA.get(a); if(!p) return "";
+    return `<tr><td class="num">${a}</td><td class="v num">${fmtM(p.b)}</td><td class="v num">${fmtM(q?q.b:p.b)}</td><td class="v num">${Math.round(p.eq*100)}%</td></tr>`; }).join("");
+  const y1=d0.net*12, pot=b.atRet, k1=Math.min(pot,2*y1), k2=Math.min(pot-k1,6*y1), k3=Math.max(0,pot-k1-k2), kt=Math.max(1,pot);
+  const bucket=`<div class="bk"><i style="width:${k1/kt*100}%;background:var(--ok)"></i><i style="width:${k2/kt*100}%;background:var(--riverbed-hi)"></i><i style="width:${k3/kt*100}%;background:#ED1B2E"></i></div>
+    <div class="bkl"><span><i style="background:var(--ok)"></i>${L("Tiền mặt 2 năm","Cash, 2 years")} <b class="num">${fmtM(k1)}</b></span><span><i style="background:var(--riverbed-hi)"></i>${L("Trái phiếu năm 3–8","Bonds, years 3–8")} <b class="num">${fmtM(k2)}</b></span><span><i style="background:#ED1B2E"></i>${L("Tăng trưởng","Growth")} <b class="num">${fmtM(k3)}</b></span></div>`;
+  const vpf = rp.marg>0? `<div class="vpf">${Ii("protect",16)}<span>${L(`Quỹ hưu trí tự nguyện: khấu trừ thuế TNCN đến ${VPF_CAP} tr/tháng, tiết kiệm ~${fmtM1(rp.vpfTax)}/năm ở bậc thuế ${Math.round(rp.marg*100)}%.`,`Voluntary pension fund: PIT deduction up to VND ${VPF_CAP}m a month, saving ~${fmtM1(rp.vpfTax)} a year at the ${Math.round(rp.marg*100)}% band.`)}</span></div>`:"";
+  return head+`<div class="retire">
+   <div class="vitals">
+    <div class="vital"><span class="eyebrow">${L("Mức sẵn sàng","Readiness")}</span><b class="num" style="color:${col(b.funded)}">${fundedTxt}</b><span>${fmtM(b.atRet)} / ${fmtM(b.need)}</span></div>
+    <div class="vital"><span class="eyebrow">${L("Đủ chi đến","Lasts to")}</span><b class="num" style="color:${col(b.depl&&b.depl<rp.life?.5:1)}">${lastTo(b)}</b><small>${L("Dự trù","Plan")} ${rp.life}</small></div>
+    <div class="vital"><span class="eyebrow">${L("Cần góp thêm","Extra needed")}</span><b class="num">${m.reqMonthly>0?fmtM1(m.reqMonthly):L("Đủ","None")}</b><span>${m.reqMonthly>0?L("mỗi tháng","a month"):L("đúng lộ trình","on track")}</span></div>
+   </div>
+   ${retChart(rp)}
+   <h3 class="rh">${L("Cách đóng khoảng thiếu","Ways to close the gap")}</h3>${levH}
+   <h3 class="rh">${L(`Tháng đầu nghỉ hưu, tuổi ${rp.ret}`,`First month of retirement, age ${rp.ret}`)}</h3>
+   <table class="kpis rt"><tbody>${flows}</tbody></table>
+   <p class="note">${L(`Tương đương ${fmtM1(d0.sp*rp.inflF)}/tháng theo giá năm nghỉ hưu.`,`Equals ${fmtM1(d0.sp*rp.inflF)}/month in retirement-year prices.`)}${n0(ce.retLump)?L(` Cộng khoản chi lớn ${fmtM(ce.retLump)}.`,` Plus large costs of ${fmtM(ce.retLump)}.`):""}</p>
+   <h3 class="rh">${L("Kịch bản","Scenarios")}</h3>
+   <table class="kpis rt"><thead><tr><th></th><th style="text-align:right">${L("Quỹ lúc hưu","Pot at retirement")}</th><th style="text-align:right">${L("Đạt","Funded")}</th><th style="text-align:right">${L("Đủ đến","Lasts to")}</th></tr></thead><tbody>${sc}</tbody></table>
+   <details class="rmore"><summary>${L("Lộ trình tích luỹ & phân bổ","Milestones & allocation")}</summary>
+    <table class="kpis rt"><thead><tr><th>${L("Tuổi","Age")}</th><th style="text-align:right">${L("Dự phóng","Projected")}</th><th style="text-align:right">${L("Đúng lộ trình","On track")}</th><th style="text-align:right">${L("Cổ phiếu","Equity")}</th></tr></thead><tbody>${msRows}</tbody></table>
+    <h3 class="rh">${L("3 lớp dòng tiền khi nghỉ hưu","Three income layers at retirement")}</h3>${bucket}
+   </details>
+   ${vpf}
+   <p class="note" style="margin-top:10px">${L(`Giá hôm nay, lạm phát 4%. Chi tiêu ${m.retCustom?"theo mục tiêu khách":`${Math.round(m.retPct*100)}% thu nhập`}, giảm 10% sau 75 tuổi và 20% sau 85; y tế tăng nhanh hơn lạm phát 3%/năm. Cổ phiếu giảm dần 10 năm trước hưu; lợi suất sau hưu ${fmtD((nomEq(b.eqR))*100,1)}%/năm danh nghĩa. Thận trọng: lợi suất −2 điểm, sống thêm 5 năm.`,`Today's money, 4% inflation. Spending ${m.retCustom?"per client target":`${Math.round(m.retPct*100)}% of income`}, down 10% after 75 and 20% after 85; healthcare rises 3% a year above inflation. Equities taper over the last 10 years; post-retirement return ${fmtD((nomEq(b.eqR))*100,1)}% nominal. Cautious: returns −2 points, five more years of life.`)}</p>
+  </div>`;
 }
 
 function renderBar(){
@@ -1747,6 +1871,7 @@ function summaryText(){
   const lines=[`${c.name||L("Khách hàng","Client")} · ${L(seg.vi,seg.en)}`, `${L("BMI tài chính","Financial BMI")}: ${r.overall}/100 (${L(tierOf(r.overall).vi,tierOf(r.overall).en)})`, "", L("3 việc ưu tiên:","Top 3 priorities:"),
     ...r.needs.slice(0,3).map((n,i)=>{ const p=bestProduct(n), pr=p&&brandOf(p);
       return `${i+1}. ${n.t}: ${n.a}${p?` ${L("Giải pháp","Solution")}: ${pr?L(pr.pvi,pr.pen):L(p.vi,p.en)}.`:""}${n.ask?` ${askText(n,p)}.`:""}`; })];
+  const rp=r.m.rp; if(rp&&!rp.retired) lines.push("", L(`Hưu trí ở tuổi ${rp.ret}: đạt ${pct(Math.min(9.99,rp.b.funded))} (${fmtM(rp.b.atRet)} / ${fmtM(rp.b.need)})${r.m.reqMonthly>0?`, cần góp thêm ${fmtM1(r.m.reqMonthly)}/tháng`:""}.`,`Retirement at ${rp.ret}: ${pct(Math.min(9.99,rp.b.funded))} funded (${fmtM(rp.b.atRet)} / ${fmtM(rp.b.need)})${r.m.reqMonthly>0?`, needs ${fmtM1(r.m.reqMonthly)} more a month`:""}.`));
   if(c.followUp) lines.push("", L("Hẹn rà soát: ","Review date: ")+c.followUp);
   lines.push("", L("Tài liệu tham khảo, không phải cam kết lợi nhuận.","For reference only; not a return guarantee."));
   return lines.join("\n"); }
