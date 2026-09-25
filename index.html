@@ -1,0 +1,1456 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF8F4">
+<title>Advisor Compass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Lora:ital,wght@1,400;1,500&display=swap">
+<style>
+/* Single deliberate light "glass" world — every color set explicitly */
+:root{
+  color-scheme:light;
+  --crimson:#ED1B2E; --crimson-hi:#FF4658; --crimson-lo:#A90E1D;
+  --whiskey:#B9804F; --whiskey-hi:#CE9B74; --riverbed:#455560; --riverbed-hi:#7D909D;
+  --bg0:#F7F3EF; --bg1:#FFFFFF; --bg2:#EEF2F5;
+  --ink:#18222A; --ink-2:#44525C; --mute:#76848E; --faint:#9AA6AE;
+  --line:rgba(69,85,96,.12); --line-2:rgba(69,85,96,.20);
+  --g1:rgba(255,255,255,.55); --g2:rgba(255,255,255,.80); --g3:rgba(255,255,255,.92);
+  --surface:#FFFFFF; --surface-2:rgba(255,255,255,.7);
+  --chip:rgba(206,155,116,.18); --chip-ink:#8A5A33;
+  --ok:#1F8A5E; --ok-bg:rgba(31,138,94,.12); --warn:#A86A00; --warn-bg:rgba(230,160,30,.16);
+  --hi:#C8501C; --hi-bg:rgba(232,110,50,.14); --crit:#C8102E; --crit-bg:rgba(237,27,46,.11);
+  --font:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:"Lora",Georgia,"Times New Roman",serif;
+  --blur:saturate(160%) blur(22px);
+  --edge:inset 0 1px 0 rgba(255,255,255,.95), inset 0 0 0 1px rgba(255,255,255,.7), 0 0 0 1px rgba(69,85,96,.06);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;font-weight:400;letter-spacing:-.005em;
+  background:
+    radial-gradient(900px 620px at 105% -8%, rgba(255,94,110,.34), transparent 60%),
+    radial-gradient(820px 640px at -18% 28%, rgba(146,180,204,.45), transparent 62%),
+    radial-gradient(760px 620px at 85% 105%, rgba(236,190,150,.55), transparent 62%),
+    linear-gradient(165deg, #FFF8F4 0%, #F4F7FA 55%, #FBF1EA 100%);
+  background-attachment:fixed; background-color:var(--bg0)}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:linear-gradient(rgba(69,85,96,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(69,85,96,.05) 1px,transparent 1px);
+  background-size:44px 44px; mask-image:radial-gradient(ellipse at 50% 20%, #000 20%, transparent 75%)}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.app{position:relative;z-index:1;max-width:460px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+/* Layer 1 — top bar glass */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;align-items:center;gap:12px;padding:14px 16px;
+  background:linear-gradient(180deg,rgba(255,255,255,.78),rgba(255,255,255,.55));-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-bottom:1px solid var(--line)}
+.mark{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.mark svg{flex:none;filter:drop-shadow(0 2px 6px rgba(237,27,46,.25))}
+.mark b{font-weight:600;letter-spacing:.02em;font-size:15px}
+.mark small{display:block;font-size:10px;color:var(--mute);letter-spacing:.16em;text-transform:uppercase;font-weight:500;line-height:1.3}
+.lang{display:flex;border-radius:999px;padding:3px;flex:none;background:var(--g1);box-shadow:var(--edge)}
+.lang button{border:0;background:none;padding:4px 11px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--mute);cursor:pointer}
+.lang button[aria-pressed="true"]{background:linear-gradient(135deg,var(--crimson-hi),var(--crimson));color:#fff;box-shadow:0 3px 10px rgba(237,27,46,.3)}
+.iconbtn{border:0;background:var(--g1);box-shadow:var(--edge);padding:6px;border-radius:12px;cursor:pointer;color:var(--ink-2);display:flex}
+main{flex:1;padding:22px 16px 120px}
+h1{font-size:28px;line-height:1.15;letter-spacing:-.025em;margin:0 0 8px;font-weight:300;text-wrap:balance}
+h1 em{font-style:normal;font-weight:600;background:linear-gradient(90deg,var(--crimson),var(--whiskey));-webkit-background-clip:text;background-clip:text;color:transparent}
+h2{font-size:13px;margin:0;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--ink)}
+.lede{color:var(--ink-2);margin:0 0 20px;font-weight:300}
+.eyebrow{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;font-weight:500;color:var(--mute)}
+/* progress */
+.prog{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin:0 0 18px}
+.prog i{height:3px;border-radius:2px;background:var(--line)}
+.prog i.done{background:linear-gradient(90deg,var(--riverbed-hi),var(--whiskey))}
+.prog i.on{background:linear-gradient(90deg,var(--crimson),var(--crimson-hi));box-shadow:0 0 8px rgba(237,27,46,.45)}
+.stephead{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.pill-ico{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;flex:none;color:#fff;
+  background:linear-gradient(145deg,var(--crimson-hi),var(--crimson-lo));box-shadow:0 8px 20px rgba(237,27,46,.3),inset 0 1px 0 rgba(255,255,255,.35)}
+/* Layer 2 — glass cards */
+.glass,.script,.seg,.cli,.need,.score,.radar-wrap,.retire,.kpiwrap,.pillars div{
+  background:linear-gradient(145deg,var(--g2),var(--g1));-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  box-shadow:var(--edge),0 10px 30px rgba(69,85,96,.12);border:0}
+.script{position:relative;border-radius:20px 20px 20px 6px;padding:14px 16px;margin:0 0 22px;overflow:hidden}
+.script::after{content:"";position:absolute;inset:0 0 auto 0;height:1px;background:linear-gradient(90deg,transparent,rgba(206,155,116,.7),transparent)}
+.script .lbl{display:flex;align-items:center;gap:7px;font-size:10px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--whiskey)}
+.script p{margin:8px 0 0;font-family:var(--serif);font-style:italic;font-size:16.5px;line-height:1.5;color:var(--ink)}
+.why{margin-top:10px;font-size:13px;color:var(--ink-2)}
+.why summary{cursor:pointer;font-weight:500;color:var(--ink-2);list-style:none;font-size:12.5px}
+.why summary::-webkit-details-marker{display:none}
+.why summary::before{content:"+ ";color:var(--whiskey);font-weight:700}
+.why[open] summary::before{content:"– "}
+.why p{margin:6px 0 0;font-family:var(--font);font-style:normal;font-size:13px;color:var(--ink-2)}
+/* fields — Layer 3 */
+.fields{display:grid;gap:18px}
+.field label,.field .flabel{display:block;font-weight:500;font-size:13.5px;margin-bottom:8px;color:var(--ink)}
+.field .hint{font-size:12px;color:var(--mute);margin-top:5px}
+.inwrap{display:flex;align-items:center;border-radius:14px;background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px var(--line-2),0 2px 8px rgba(69,85,96,.06);transition:box-shadow .2s}
+.inwrap:focus-within{box-shadow:inset 0 0 0 1px var(--whiskey),0 0 0 4px rgba(206,155,116,.16)}
+.inwrap input{border:0;background:none;padding:13px 14px;flex:1;min-width:0;font-size:17px;outline:none;font-variant-numeric:tabular-nums;font-weight:500}
+.inwrap input::-webkit-calendar-picker-indicator{opacity:.6}
+.inwrap .unit{padding-right:14px;color:var(--mute);font-size:12px;font-weight:500;white-space:nowrap;letter-spacing:.02em}
+textarea.ta{width:100%;border:0;border-radius:14px;background:rgba(255,255,255,.85);box-shadow:inset 0 0 0 1px var(--line-2);padding:12px 14px;min-height:90px;resize:vertical;outline:none}
+textarea.ta:focus{box-shadow:inset 0 0 0 1px var(--whiskey),0 0 0 4px rgba(206,155,116,.16)}
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{border:0;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px var(--line-2);border-radius:999px;padding:9px 15px;font-size:13.5px;cursor:pointer;font-weight:400;color:var(--ink-2);transition:all .15s}
+.choice:hover{background:#fff}
+.choice[aria-pressed="true"]{color:#fff;font-weight:600;background:linear-gradient(135deg,#D9A77E,var(--whiskey));box-shadow:0 6px 16px rgba(185,128,79,.35),inset 0 1px 0 rgba(255,255,255,.4)}
+.range{display:flex;align-items:center;gap:12px}
+.range input{flex:1;accent-color:var(--whiskey)}
+.range output{min-width:52px;text-align:right;font-weight:600;font-size:17px}
+:focus-visible{outline:2px solid var(--whiskey-hi);outline-offset:2px}
+/* segments */
+.segs{display:grid;gap:12px}
+.seg{position:relative;display:grid;grid-template-columns:auto 1fr;gap:3px 14px;text-align:left;border-radius:20px;padding:16px;cursor:pointer;color:var(--ink);transition:transform .15s}
+.seg:hover{transform:translateY(-1px)}
+.seg[aria-pressed="true"]{background:linear-gradient(145deg,rgba(255,236,238,.95),rgba(255,255,255,.85));box-shadow:inset 0 0 0 1.5px rgba(237,27,46,.55),0 14px 30px rgba(237,27,46,.16)}
+.seg .tier{grid-row:span 3;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:rgba(206,155,116,.14);box-shadow:var(--edge);color:var(--whiskey)}
+.seg[aria-pressed="true"] .tier{background:linear-gradient(145deg,var(--crimson-hi),var(--crimson-lo));color:#fff;box-shadow:0 6px 16px rgba(237,27,46,.45)}
+.seg b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.seg .range-t{font-size:12.5px;color:var(--whiskey);font-weight:500}
+.seg .focus{font-size:12.5px;color:var(--mute);font-weight:300}
+/* bottom bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:6;pointer-events:none}
+.bar-in{pointer-events:auto;max-width:460px;margin:0 auto;display:flex;gap:10px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));
+  background:linear-gradient(0deg,rgba(255,255,255,.88),rgba(255,255,255,.6));-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-top:1px solid var(--line)}
+.btn{border:0;border-radius:16px;padding:14px 18px;font-weight:600;cursor:pointer;font-size:14.5px;letter-spacing:.01em;transition:transform .12s,box-shadow .2s}
+.btn:active{transform:scale(.98)}
+.btn-primary{flex:1;color:#fff;background:linear-gradient(135deg,var(--crimson-hi) 0%,var(--crimson) 45%,var(--crimson-lo) 100%);box-shadow:0 10px 28px rgba(237,27,46,.38),inset 0 1px 0 rgba(255,255,255,.28)}
+.btn-primary:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+.btn-ghost{background:rgba(255,255,255,.85);color:var(--ink);box-shadow:var(--edge)}
+.btn-sm{padding:9px 13px;font-size:12.5px;border-radius:12px}
+/* home hero */
+.hero{border-radius:26px;padding:22px 20px 20px;margin-bottom:24px;position:relative;overflow:hidden;
+  background:
+    radial-gradient(420px 260px at 100% 0%, rgba(255,120,132,.55), transparent 65%),
+    radial-gradient(380px 260px at 0% 100%, rgba(236,190,150,.60), transparent 70%),
+    linear-gradient(150deg, rgba(255,255,255,.85), rgba(255,255,255,.55));
+  box-shadow:inset 0 1px 0 #fff,inset 0 0 0 1px rgba(255,255,255,.8),0 20px 44px rgba(200,80,90,.16);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.hero h1{font-size:27px}
+.hero p{margin:0 0 18px;color:var(--ink-2);font-weight:300;font-size:14.5px}
+.hero .btn-primary{flex:none}
+.hero svg.deco{position:absolute;right:-40px;top:-40px;opacity:.14}
+.hero .eyebrow{color:var(--crimson-lo)}
+.list{display:grid;gap:10px;margin-top:12px}
+.cli{display:grid;grid-template-columns:50px 1fr auto;gap:13px;align-items:center;border-radius:20px;padding:12px 14px 12px 12px;cursor:pointer;text-align:left;width:100%;color:var(--ink);transition:transform .15s}
+.cli:hover{transform:translateY(-1px)}
+.cli .sc{width:50px;height:50px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:16px}
+.cli b{font-weight:600}
+.cli .meta{font-size:12px;color:var(--mute)}
+.tag{display:inline-block;font-size:10.5px;font-weight:500;border-radius:999px;padding:3px 9px;background:var(--chip);color:var(--chip-ink);letter-spacing:.03em}
+.tag.demo{background:rgba(255,255,255,.6);color:var(--ink-2);box-shadow:inset 0 0 0 1px var(--line-2)}
+.note{font-size:12px;color:var(--mute);margin-top:14px;font-weight:300}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:22px}
+.pillars div{border-radius:18px;padding:12px;font-size:12px;color:var(--crimson)}
+.pillars div b{display:block;color:var(--ink);font-size:13px;font-weight:500;margin-top:6px}
+/* report */
+.rhead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px}
+.rhead h1{font-size:32px}
+.score{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;border-radius:24px;padding:16px;margin:14px 0 14px;position:relative;overflow:hidden}
+.score::before{content:"";position:absolute;width:240px;height:240px;left:-70px;top:-90px;background:radial-gradient(circle,rgba(255,110,122,.22),transparent 65%);pointer-events:none}
+.ring{position:relative;width:96px;height:96px}
+.ring span{position:absolute;inset:0;display:grid;place-items:center;font-size:30px;font-weight:300;letter-spacing:-.03em}
+.ring small{position:absolute;bottom:20px;left:0;right:0;text-align:center;font-size:9.5px;color:var(--mute);letter-spacing:.1em}
+.tier-lbl{font-weight:500;font-size:20px;letter-spacing:-.01em}
+.radar-wrap{border-radius:24px;padding:10px 8px 6px;margin-bottom:6px}
+.radar-wrap svg{width:100%;height:auto;display:block}
+.sec{margin:28px 0 12px;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 8px}
+.need{border-radius:20px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
+.need::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:0 3px 3px 0;background:var(--sevc,var(--whiskey))}
+.need.critical{--sevc:var(--crit)} .need.high{--sevc:var(--hi)} .need.medium{--sevc:var(--warn)}
+.need .nh{display:flex;gap:12px;align-items:flex-start}
+.need .rank{flex:none;width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:600;font-size:12.5px;color:#fff;background:linear-gradient(145deg,var(--riverbed-hi),var(--riverbed));box-shadow:0 4px 10px rgba(69,85,96,.25)}
+.need h3{margin:0;font-size:15.5px;line-height:1.35;font-weight:600;letter-spacing:-.01em}
+.sev{font-size:10.5px;font-weight:600;border-radius:999px;padding:3px 9px;white-space:nowrap;letter-spacing:.03em}
+.sev.critical{background:var(--crit-bg);color:var(--crit)}
+.sev.high{background:var(--hi-bg);color:var(--hi)}
+.sev.medium{background:var(--warn-bg);color:var(--warn)}
+.sev.ok{background:var(--ok-bg);color:var(--ok)}
+.need .find{margin:10px 0 0;font-size:13.5px;color:var(--ink-2);font-weight:300}
+.need .act{margin:8px 0 0;font-size:14px}
+.need .act b{font-weight:600;color:var(--crimson-lo)}
+.sol{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.sol span{font-size:11.5px;border-radius:10px;padding:4px 9px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink-2)}
+.pmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px}
+.kpiwrap{border-radius:20px;padding:4px 14px;overflow-x:auto}
+.kpis{width:100%;border-collapse:collapse;font-size:13.5px}
+.kpis th,.kpis td{padding:11px 4px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.kpis tr:last-child td{border-bottom:0}
+.kpis th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:500}
+.kpis td{font-weight:300}
+.kpis td.v{text-align:right;font-weight:600;white-space:nowrap}
+.kpis td.b{color:var(--mute);white-space:nowrap;text-align:right}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:8px;vertical-align:1px}
+.retire{border-radius:20px;padding:16px}
+.bars{display:grid;gap:10px;margin-top:4px}
+.bars .row{display:grid;grid-template-columns:84px 1fr auto;gap:10px;align-items:center;font-size:12.5px;color:var(--ink-2)}
+.bars .row b{color:var(--ink);font-weight:600}
+.bars .track{height:10px;border-radius:6px;background:rgba(69,85,96,.10);overflow:hidden}
+.bars .fill{height:100%;border-radius:6px}
+.disc{font-size:11px;color:var(--faint);margin-top:26px;line-height:1.55;font-weight:300}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);z-index:10;padding:10px 16px;border-radius:14px;font-size:13px;font-weight:500;color:var(--ink);
+  background:rgba(24,34,42,.88);color:#fff;-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:0 12px 30px rgba(24,34,42,.25)}
+.status{font-size:11.5px;color:var(--mute);display:flex;align-items:center;gap:7px;font-weight:300}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--mute);display:inline-block}
+.status.live i{background:var(--ok)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media (min-width:500px){body{padding-block:24px}.app{border-radius:30px;overflow:hidden;min-height:calc(100% - 48px);background:rgba(255,255,255,.35);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.8),0 40px 90px rgba(69,85,96,.18)}.bar-in{border-radius:0 0 30px 30px}}
+
+.choice.sug{box-shadow:inset 0 0 0 1.5px rgba(185,128,79,.55);background:rgba(206,155,116,.10);color:var(--chip-ink);border-style:dashed}
+.choice em{font-style:normal;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;margin-left:6px;opacity:.75}
+.inwrap input::placeholder{color:var(--faint);font-weight:400}
+.range.is-sug output{color:var(--faint)}
+.holdings{margin-top:6px;padding-top:18px;border-top:1px dashed var(--line-2)}
+.universe{margin-top:12px;border-radius:16px;padding:10px 14px;background:rgba(255,255,255,.6);box-shadow:var(--edge)}
+.universe summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--crimson-lo);list-style:none}
+.universe summary::-webkit-details-marker{display:none}
+.universe summary::before{content:"+ "}
+.universe[open] summary::before{content:"– "}
+.prod{padding:10px 0;border-top:1px solid var(--line)}
+.prod:first-of-type{margin-top:8px}
+.prod b{font-size:13.5px;font-weight:600}
+.prod p{margin:3px 0 0;font-size:12.5px;color:var(--ink-2);font-weight:300}
+.prod small,.pp small{display:block;margin-top:4px;font-size:11.5px;color:var(--whiskey)}
+.prods{display:grid;gap:8px;margin-top:12px}
+.pp{border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px var(--line)}
+.pp > div{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pp b{font-size:13.5px;font-weight:600}
+.pp p{margin:3px 0 0;font-size:12.5px;color:var(--ink-2);font-weight:300}
+.tag.have{background:var(--ok-bg);color:var(--ok)}
+.assume{border-radius:16px;padding:12px 14px;margin:0 0 14px;font-size:13px;color:var(--chip-ink);background:rgba(206,155,116,.14);box-shadow:inset 0 0 0 1px rgba(185,128,79,.25)}
+.linkbtn{border:0;background:none;color:var(--crimson-lo);font-weight:600;cursor:pointer;padding:0 2px;text-decoration:underline}
+
+.pp{border-radius:16px;padding:12px;background:rgba(255,255,255,.8);box-shadow:inset 0 0 0 1px var(--line)}
+.pph{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.ppt{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.toppick,.altpick{position:relative}
+.altpick{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line-2)}
+.tp{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,var(--crimson-hi),var(--crimson-lo));border-radius:6px;padding:2px 7px;margin-bottom:6px}
+.tp.alt{background:rgba(69,85,96,.14);color:var(--ink-2)}
+.pick{display:flex;gap:11px;align-items:flex-start}
+.plogo{flex:none;border-radius:10px;background:#fff;box-shadow:0 0 0 1px var(--line),0 2px 6px rgba(69,85,96,.12);object-fit:contain;padding:3px}
+.plogo.mono{display:grid;place-items:center;color:#fff;font-weight:800;letter-spacing:.02em;padding:0}
+.pk{min-width:0}
+.pkn b{font-size:14px;font-weight:600;line-height:1.3}
+.pkp{font-size:11.5px;color:var(--mute);margin-top:1px}
+.pick p{margin:4px 0 0;font-size:12.5px;color:var(--ink-2);font-weight:300;line-height:1.45}
+.pick small{display:block;margin-top:3px;font-size:10.5px;color:var(--faint)}
+.pick.compact .pkn b{font-size:13px}
+.pick.compact p{font-size:12px}
+.nopick{margin:0;font-size:12.5px;color:var(--ink-2);font-weight:300}
+.universe .pp{margin-top:10px}
+
+.live{position:sticky;top:calc(env(safe-area-inset-top,0px) + 66px);z-index:4;display:flex;align-items:center;gap:10px;margin:-6px 0 14px;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge),0 6px 18px rgba(69,85,96,.12)}
+.live:empty{display:none}
+.lscore{font-size:24px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;min-width:34px}
+.ltxt{display:flex;flex-direction:column;font-size:12px;color:var(--ink-2);line-height:1.25}
+.ltxt b{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.insight{border-radius:18px;padding:14px;background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(255,255,255,.7));box-shadow:var(--edge),0 10px 26px rgba(69,85,96,.12);position:relative;overflow:hidden}
+.insight::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--ok)}
+.insight.warn::before{background:linear-gradient(180deg,var(--crimson-hi),var(--whiskey))}
+.ih{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.im{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:6px}
+.im span{font-size:13px;color:var(--ink-2)}
+.im b{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.insight p{margin:2px 0 0;font-size:12.5px;color:var(--mute)}
+.talk{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line-2);font-family:var(--serif);font-style:italic;font-size:14.5px;color:var(--ink)}
+.talk i{display:block;font-family:var(--font);font-style:normal;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--whiskey);font-weight:600;margin-bottom:3px}
+.bmi{border-radius:24px;padding:16px;margin:14px 0 12px;background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(255,255,255,.65));box-shadow:var(--edge),0 12px 30px rgba(69,85,96,.14);position:relative;overflow:hidden}
+.bmi::before{content:"";position:absolute;width:260px;height:260px;right:-80px;top:-110px;background:radial-gradient(circle,rgba(255,110,122,.22),transparent 65%)}
+.bmiv{display:flex;align-items:baseline;gap:6px;margin-top:2px}
+.bmiv span{font-size:52px;font-weight:300;letter-spacing:-.04em;line-height:1}
+.bmiv small{color:var(--mute);font-size:14px}
+.bmiv em{font-style:normal;font-weight:600;font-size:16px;margin-left:8px}
+.gauge{margin-top:14px;position:relative}
+.gtrack{position:relative;display:flex;gap:3px;height:12px}
+.gtrack span{border-radius:6px}
+.gtrack .z1{background:linear-gradient(90deg,#E23B4A,#F08A5B)}
+.gtrack .z2{background:linear-gradient(90deg,#F2B45A,#E8CF6E)}
+.gtrack .z3{background:linear-gradient(90deg,#6CCB9A,#2E9E6B)}
+.gtrack i{position:absolute;top:-5px;width:6px;height:22px;margin-left:-3px;border-radius:3px;background:var(--ink);box-shadow:0 0 0 2px #fff,0 3px 8px rgba(0,0,0,.25)}
+.glab{position:relative;height:14px;font-size:10px;color:var(--mute);margin-top:4px}
+.glab span{position:absolute;transform:translateX(-50%)}
+.glab span:first-child{transform:none;left:0}
+.glab span:last-child{transform:none}
+.gzones{display:flex;font-size:10.5px;color:var(--ink-2);font-weight:500}
+.gzones span:nth-child(1),.gzones span:nth-child(2){flex:40}
+.gzones span:nth-child(3){flex:20;text-align:right}
+.vitals{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.vital{border-radius:18px;padding:12px 10px;display:flex;flex-direction:column;gap:2px;background:linear-gradient(145deg,rgba(255,255,255,.88),rgba(255,255,255,.6));box-shadow:var(--edge),0 8px 22px rgba(69,85,96,.1)}
+.vital .eyebrow{font-size:9px;letter-spacing:.12em}
+.vital b{font-size:22px;font-weight:600;letter-spacing:-.02em}
+.vital span:not(.eyebrow){font-size:11.5px;color:var(--ink-2);line-height:1.3}
+.vital small{font-size:9.5px;color:var(--faint);line-height:1.3;margin-top:4px}
+.comps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.comp{border-radius:14px;padding:10px 12px;background:rgba(255,255,255,.75);box-shadow:inset 0 0 0 1px var(--line)}
+.ch{display:flex;justify-content:space-between;gap:6px;font-size:12px;color:var(--ink);font-weight:500;line-height:1.3}
+.ch b{font-size:14px}
+.cbar{height:5px;border-radius:3px;background:rgba(69,85,96,.1);margin:6px 0 4px;overflow:hidden}
+.cbar i{display:block;height:100%;border-radius:3px}
+.comp small{font-size:10.5px;color:var(--mute)}
+
+.qhead h1{font-size:30px}
+.qprog{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin:4px 0 18px}
+.qprog i{height:4px;border-radius:2px;background:var(--line)}
+.qprog i.done{background:linear-gradient(90deg,var(--riverbed-hi),var(--whiskey))}
+.qprog i.on{background:linear-gradient(90deg,var(--crimson),var(--crimson-hi))}
+.qtitle{font-family:var(--serif);font-style:italic;font-weight:400;font-size:26px;line-height:1.3;letter-spacing:-.01em;margin:8px 0 22px}
+.qopts{display:grid;gap:10px}
+.qopt{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;border:0;border-radius:18px;padding:16px 48px 16px 18px;cursor:pointer;color:var(--ink);
+  background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(255,255,255,.68));box-shadow:var(--edge),0 8px 22px rgba(69,85,96,.10);transition:transform .15s, box-shadow .2s}
+.qopt:hover{transform:translateY(-1px)}
+.qopt b{font-size:16.5px;font-weight:600}
+.qopt span{font-size:12.5px;color:var(--mute)}
+.qopt i{position:absolute;right:16px;top:50%;width:20px;height:20px;margin-top:-10px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--line-2)}
+.qopt[aria-pressed="true"]{background:linear-gradient(145deg,rgba(255,236,238,.98),rgba(255,255,255,.9));box-shadow:inset 0 0 0 1.5px rgba(237,27,46,.55),0 12px 26px rgba(237,27,46,.16)}
+.qopt[aria-pressed="true"] i{background:linear-gradient(135deg,var(--crimson-hi),var(--crimson-lo));box-shadow:0 0 0 3px rgba(237,27,46,.15)}
+.reveal{text-align:left}
+.rv{display:flex;justify-content:center;align-items:baseline;gap:6px;margin-top:10px}
+.rv span{font-size:96px;font-weight:200;letter-spacing:-.05em;line-height:1}
+.rv small{font-size:18px;color:var(--mute)}
+.rvt{text-align:center;font-size:20px;font-weight:600;margin-top:4px}
+.bmi.bare{background:none;box-shadow:none;padding:0 4px;margin:6px 0 18px}
+.bmi.bare::before{display:none}
+.rvbox,.rvup{border-radius:20px;padding:14px 16px;margin-bottom:12px;background:linear-gradient(145deg,rgba(255,255,255,.9),rgba(255,255,255,.65));box-shadow:var(--edge),0 10px 26px rgba(69,85,96,.12)}
+.rvrow{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:14.5px;font-weight:500}
+.rvrow b{font-size:18px}
+.rvd{display:block;font-size:12px;color:var(--mute)}
+.rvup{background:linear-gradient(145deg,rgba(255,236,238,.95),rgba(255,248,242,.8))}
+.rvupv,.p90v{display:flex;align-items:baseline;gap:10px;margin-top:4px}
+.rvupv span,.p90v span{font-size:28px;font-weight:300;color:var(--mute)}
+.rvupv i,.p90v i{font-style:normal;color:var(--crimson);font-size:22px}
+.rvupv b,.p90v b{font-size:40px;font-weight:600;letter-spacing:-.03em;background:linear-gradient(90deg,var(--crimson),var(--whiskey));-webkit-background-clip:text;background-clip:text;color:transparent}
+.rvup p{margin:2px 0 0;font-size:13px;color:var(--ink-2)}
+.plan90{border-radius:22px;padding:16px;margin:16px 0 4px;background:linear-gradient(145deg,rgba(255,236,238,.95),rgba(255,248,242,.8));box-shadow:var(--edge),0 12px 28px rgba(237,27,46,.12)}
+.p90v em{font-style:normal;font-size:14px;font-weight:600;color:var(--ok);margin-left:4px}
+.plan90 ol{margin:10px 0 0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+.plan90 li{counter-increment:s;display:flex;align-items:center;gap:10px;font-size:13.5px;background:rgba(255,255,255,.75);border-radius:12px;padding:9px 12px}
+.plan90 li::before{content:counter(s);flex:none;width:22px;height:22px;border-radius:7px;display:grid;place-items:center;font-size:11.5px;font-weight:700;color:#fff;background:linear-gradient(145deg,var(--crimson-hi),var(--crimson-lo))}
+.plan90 li span{flex:1}
+.plan90 li b{color:var(--ok);font-weight:700}
+.tag.up{background:var(--ok-bg);color:var(--ok);font-weight:600}
+
+.sols{margin-top:10px}
+.sols summary{cursor:pointer;list-style:none;font-size:12.5px;font-weight:600;color:var(--crimson-lo)}
+.sols summary::-webkit-details-marker{display:none}
+.sols > summary::before{content:"+ "}
+.sols[open] > summary::before{content:"– "}
+.gzones span{white-space:nowrap}
+
+.fit{margin:0 0 8px;font-size:12.5px;color:var(--ink);line-height:1.45;background:rgba(206,155,116,.12);border-radius:10px;padding:7px 10px}
+.fit b{color:var(--chip-ink);font-weight:600}
+.tag.defer{background:rgba(69,85,96,.12);color:var(--ink-2);font-weight:500;margin-left:6px}
+
+.nf{margin-top:8px;font-size:15px;font-weight:600;color:var(--ink)}
+.need .act{margin:4px 0 0;font-size:14px;color:var(--ink-2)}
+.pp{padding:10px 12px}
+.pick{display:flex;gap:11px;align-items:center}
+.pk{display:flex;flex-direction:column;min-width:0}
+.pk b{font-size:14px;font-weight:600;line-height:1.3}
+.pk small{font-size:11.5px;color:var(--mute);line-height:1.35;margin-top:1px}
+.pick.alt .pk b{font-size:13px}
+.fit{margin:8px 0 0;font-size:12.5px;color:var(--chip-ink);background:rgba(206,155,116,.12);border-radius:10px;padding:6px 10px;font-weight:500}
+.pp .tag.have{margin-top:6px}
+.altd{margin-top:6px}
+.altd summary{cursor:pointer;list-style:none;font-size:11.5px;color:var(--mute)}
+.altd summary::-webkit-details-marker{display:none}
+.altd summary::before{content:"+ "}
+.altd .pick{margin-top:6px}
+
+.pp > .pick{flex-wrap:nowrap}
+.pp .fit{color:var(--chip-ink);font-weight:500}
+.altd summary::before{content:"+ "}
+.altd[open] summary::before{content:"– "}
+
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.pair .inwrap{min-width:0}
+.pair .inwrap input{width:100%;min-width:0}
+.inwrap input{min-width:0;width:100%}
+.pair .inwrap input{font-size:15.5px;padding:11px 10px}
+.pair .unit{font-size:11px;padding-right:10px}
+.kid{border-radius:14px;padding:10px;margin-bottom:10px;background:rgba(255,255,255,.6);box-shadow:inset 0 0 0 1px var(--line)}
+.kidh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
+.kid .choices{margin-top:8px}
+.kid .choice em{font-style:normal;font-size:10.5px;color:var(--mute);margin-left:4px}
+.bsbox{border-radius:18px;padding:14px;margin:6px 0 4px;background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(255,255,255,.7));box-shadow:var(--edge),0 10px 26px rgba(69,85,96,.12)}
+.bsbox .nw{font-weight:700;font-size:14px}
+.bsr{display:grid;grid-template-columns:90px 1fr auto;gap:10px;align-items:center;font-size:12.5px;margin-top:9px;color:var(--ink-2)}
+.bst{height:9px;border-radius:5px;background:rgba(69,85,96,.08);overflow:hidden}
+.bst i{display:block;height:100%;border-radius:5px}
+.bsr b{font-size:13px;color:var(--ink)}
+</style>
+
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="bar" id="bar"></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------------- i18n ---------------- */
+let LANG = "vi";
+try{ LANG = localStorage.getItem("ac-lang") || "vi"; }catch(e){}
+const L = (vi,en)=> LANG==="vi"?vi:en;
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------------- icons ---------------- */
+const I = {
+  earn:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+  spend:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5.5" width="19" height="13" rx="2.5"/><path d="M2.5 10h19"/><path d="M6.5 15h3"/></svg>',
+  save:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V7z"/><path d="M9 12h6M12 9v6"/></svg>',
+  borrow:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V10l8-6 8 6v11"/><path d="M9 21v-6h6v6"/></svg>',
+  invest:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M12 12a9 9 0 0 1 9-9"/><path d="M12 12a9 9 0 0 0-9 9"/><circle cx="12" cy="12" r="2.2"/></svg>',
+  protect:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.4-7-10.5A4.5 4.5 0 0 1 12 7a4.5 4.5 0 0 1 7 3.5C19 16.6 12 21 12 21z"/></svg>',
+  profile:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>',
+  chat:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.6A8 8 0 1 1 21 12z"/></svg>',
+  back:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
+  compass:'<svg width="30" height="30" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14.5" fill="none" stroke="var(--riverbed)" stroke-width="2"/><path d="M16 5l3.2 11L16 27l-3.2-11z" fill="var(--crimson)"/><path d="M16 16l3.2 0L16 27z" fill="var(--whiskey)"/></svg>',
+};
+const tierIcon = n => `<svg width="22" height="22" viewBox="0 0 24 24">${[0,1,2,3].map(i=>`<rect x="${3+i*5}" y="${18-i*4}" width="3.4" height="${3+i*4}" rx="1" fill="currentColor" opacity="${i<n?1:.25}"/>`).join("")}</svg>`;
+
+/* ---------------- domain model ---------------- */
+const SEGMENTS = {
+  mass:   {n:1, vi:"Đại chúng", en:"Mass", rvi:"Thu nhập < 20 tr/tháng · Tài sản đầu tư < 500 tr", ren:"Income < VND 20m/month · Investable < VND 500m",
+           fvi:"Dòng tiền, quỹ dự phòng, bảo vệ cơ bản, kiểm soát nợ", fen:"Cash flow, emergency fund, basic protection, debt control", saveT:.10},
+  massaff:{n:2, vi:"Đại chúng khá giả", en:"Mass affluent", rvi:"20–50 tr/tháng · 0,5–2 tỷ", ren:"VND 20–50m/month · VND 0.5–2bn",
+           fvi:"Mục tiêu nhà, giáo dục con, bắt đầu đầu tư, bảo vệ thu nhập", fen:"Home & education goals, start investing, income protection", saveT:.15},
+  aff:    {n:3, vi:"Khá giả", en:"Affluent", rvi:"50–150 tr/tháng · 2–25 tỷ", ren:"VND 50–150m/month · VND 2–25bn",
+           fvi:"Đa dạng hoá danh mục, hưu trí, nâng cấp sức khoẻ & hiểm nghèo", fen:"Diversification, retirement, premium health & CI cover", saveT:.20},
+  hnw:    {n:4, vi:"Tài sản cao (HNW)", en:"High net worth", rvi:"> 150 tr/tháng · > 25 tỷ (≈ US$1M)", ren:"> VND 150m/month · > VND 25bn (≈ US$1M)",
+           fvi:"Bảo toàn tài sản, rủi ro tập trung, kế thừa & kế nhiệm, rủi ro doanh nghiệp", fen:"Preservation, concentration risk, succession & estate, business risk", saveT:.25},
+};
+const PILLARS = [
+  {k:"earn",   vi:"Thu nhập",  en:"Earn"},
+  {k:"spend",  vi:"Chi tiêu",  en:"Spend"},
+  {k:"save",   vi:"Tiết kiệm", en:"Save"},
+  {k:"borrow", vi:"Vay nợ",    en:"Borrow"},
+  {k:"invest", vi:"Đầu tư",    en:"Invest"},
+  {k:"protect",vi:"Bảo vệ",    en:"Protect"},
+];
+const pName = k => { const p = PILLARS.find(x=>x.k===k); return p? L(p.vi,p.en):k; };
+
+const opt = (v,vi,en)=>({v,vi,en});
+const GOALS = [
+  opt("emergency","Quỹ dự phòng","Emergency fund"), opt("home","Mua nhà","Buy a home"), opt("car","Mua xe","Buy a car"),
+  opt("education","Học vấn cho con","Children's education"), opt("retire","Nghỉ hưu","Retirement"), opt("grow","Gia tăng tài sản","Grow wealth"),
+  opt("business","Kinh doanh","Business"), opt("legacy","Để lại tài sản","Legacy"), opt("travel","Du lịch / trải nghiệm","Travel & lifestyle"),
+];
+
+/* Steps: each field: k, t (num|text|choice|multi|range|textarea), label, unit, hint, seg (filter), opts */
+const STEPS = [
+  {id:"segment"},
+  {id:"profile", icon:"profile", vi:"Hiểu khách hàng", en:"Know your client",
+   svi:"Trước khi nói về con số, em muốn hiểu anh/chị đang ở giai đoạn nào của cuộc sống và điều gì quan trọng nhất với gia đình trong 5–10 năm tới?",
+   sen:"Before we talk numbers, I'd like to understand where you are in life and what matters most to your family over the next 5–10 years.",
+   wvi:"Bước 1 của quy trình hoạch định tài chính chuẩn FPSB/CFP (ISO 22222): hiểu hoàn cảnh, giá trị và mục tiêu trước khi phân tích.",
+   wen:"Step 1 of the FPSB/CFP (ISO 22222) planning process: understand circumstances, values and goals before analysing.",
+   fields:[
+    {k:"name",t:"text",vi:"Tên gọi khách hàng",en:"Client name",hvi:"Có thể dùng tên gọi tắt để bảo mật",hen:"A nickname is fine for privacy"},
+    {k:"age",t:"num",vi:"Tuổi",en:"Age",uvi:"tuổi",uen:"yrs"},
+    {k:"family",t:"choice",vi:"Tình trạng gia đình",en:"Household",opts:[opt("single","Độc thân","Single"),opt("couple","Có gia đình","Married / partner"),opt("kids","Có gia đình, có con","Married with children"),opt("singleparent","Nuôi con một mình","Single parent")]},
+    {k:"kids",t:"kids",vi:"Con cái & kế hoạch học vấn",en:"Children & education plan"},
+    {k:"parents",t:"num",vi:"Bố mẹ / người thân đang hỗ trợ",en:"Parents or relatives supported",uvi:"người",uen:"people"},
+    {k:"work",t:"choice",vi:"Nghề nghiệp",en:"Work",opts:[opt("salaried","Làm công ăn lương","Salaried"),opt("self","Tự doanh / freelance","Self-employed"),opt("owner","Chủ doanh nghiệp","Business owner"),opt("retired","Đã nghỉ hưu","Retired")]},
+    {k:"plan",t:"choice",vi:"Đã có kế hoạch tài chính cho 3–5 năm tới?",en:"Has a financial plan for the next 3–5 years?",opts:[opt("yes","Có, rõ ràng","Yes, clear"),opt("partly","Có ý tưởng","Rough idea"),opt("no","Chưa","Not yet")]},
+    {k:"goals",t:"multi",vi:"Mục tiêu tài chính",en:"Financial goals",opts:GOALS},
+   ]},
+  {id:"earn", icon:"earn", pillar:"earn", vi:"Thu nhập", en:"Earn",
+   svi:"Mỗi tháng, sau thuế và bảo hiểm, gia đình mình thực nhận khoảng bao nhiêu? Nguồn này ổn định hay thay đổi theo doanh số, mùa vụ?",
+   sen:"Each month, after tax and social insurance, roughly how much does your household take home? Is it steady or does it move with sales or seasons?",
+   wvi:"Thu nhập ròng hộ gia đình là mẫu số cho mọi tỷ lệ sức khoẻ tài chính. Độ ổn định quyết định quy mô quỹ dự phòng.",
+   wen:"Household net income is the denominator of every health ratio. Stability sets the size of the emergency fund.",
+   fields:[
+    {k:"income",t:"num",vi:"Thu nhập ròng của khách hàng",en:"Client's net income",uvi:"tr ₫/tháng",uen:"VND m/mo"},
+    {k:"spouse",t:"num",vi:"Thu nhập ròng của vợ/chồng",en:"Partner's net income",uvi:"tr ₫/tháng",uen:"VND m/mo",hvi:"Để 0 nếu không có",hen:"Leave 0 if none"},
+    {k:"other",t:"num",vi:"Thu nhập khác (cho thuê, cổ tức, lãi…)",en:"Other income (rent, dividends, interest)",uvi:"tr ₫/tháng",uen:"VND m/mo"},
+    {k:"stability",t:"choice",vi:"Mức ổn định thu nhập",en:"Income stability",opts:[opt("stable","Ổn định","Stable"),opt("variable","Biến động","Variable")]},
+   ]},
+  {id:"spend", icon:"spend", pillar:"spend", vi:"Chi tiêu", en:"Spend",
+   svi:"Nếu chia chi tiêu hàng tháng thành 'thiết yếu' (nhà, ăn uống, học phí, đi lại) và 'phong cách sống' (mua sắm, giải trí, du lịch), mỗi phần khoảng bao nhiêu?",
+   sen:"If we split monthly spending into essentials (housing, food, school fees, transport) and lifestyle (shopping, dining out, travel), roughly how much goes to each?",
+   wvi:"Chuẩn tham chiếu 50/30/20: tối đa ~50% thiết yếu, ~30% phong cách sống, ≥ 20% tiết kiệm & đầu tư.",
+   wen:"The 50/30/20 benchmark: about 50% needs, 30% wants and at least 20% saving and investing.",
+   fields:[
+    {k:"essential",t:"num",vi:"Chi tiêu thiết yếu",en:"Essential spending",uvi:"tr ₫/tháng",uen:"VND m/mo",hvi:"Không gồm trả nợ vay",hen:"Excluding loan repayments"},
+    {k:"lifestyle",t:"num",vi:"Chi tiêu phong cách sống",en:"Lifestyle spending",uvi:"tr ₫/tháng",uen:"VND m/mo"},
+    {k:"budget",t:"choice",vi:"Có lập ngân sách / theo dõi chi tiêu?",en:"Keeps a budget?",opts:[opt("yes","Có, đều đặn","Yes, regularly"),opt("partly","Thỉnh thoảng","Sometimes"),opt("no","Không","No")]},
+   ]},
+  {id:"save", icon:"save", pillar:"save", vi:"Tài sản", en:"Assets",
+   svi:"Mình cùng liệt kê những gì gia đình đang có: tiền gửi, đầu tư, nhà cửa, bất động sản, doanh nghiệp…",
+   sen:"Let's list what the family owns: deposits, investments, home, property, business…",
+   wvi:"Tách tài sản thanh khoản, tài sản đầu tư và tài sản khó bán để biết sức chịu đựng thật và phần tiền đang nằm im.",
+   wen:"Separating liquid, investable and illiquid assets shows real resilience and idle money.",
+   fields:[
+    {k:"a_cash",t:"num",vi:"Tiền mặt & tiết kiệm",en:"Cash & deposits",uvi:"tr ₫",uen:"VND m"},
+    {k:"a_invest",t:"num",vi:"Đầu tư (quỹ, cổ phiếu, vàng)",en:"Investments (funds, shares, gold)",uvi:"tr ₫",uen:"VND m",seg:["mass","massaff"]},
+    {k:"a_bond",t:"num",vi:"Quỹ tiền tệ / trái phiếu",en:"Money market & bonds",uvi:"tr ₫",uen:"VND m",seg:["aff","hnw"]},
+    {k:"a_equity",t:"num",vi:"Cổ phiếu & quỹ cổ phiếu",en:"Shares & equity funds",uvi:"tr ₫",uen:"VND m",seg:["aff","hnw"]},
+    {k:"a_gold",t:"num",vi:"Vàng",en:"Gold",uvi:"tr ₫",uen:"VND m",seg:["aff","hnw"]},
+    {k:"a_re",t:"num",vi:"BĐS đầu tư",en:"Investment property",uvi:"tr ₫",uen:"VND m",seg:["aff","hnw"]},
+    {k:"a_reRent",t:"num",vi:"Tiền thuê BĐS ròng",en:"Net rent received",uvi:"tr ₫/tháng",uen:"VND m/mo",seg:["aff","hnw"]},
+    {k:"a_biz",t:"num",vi:"Cổ phần doanh nghiệp",en:"Business equity",uvi:"tr ₫",uen:"VND m",seg:["aff","hnw"]},
+    {k:"a_home",t:"num",vi:"Nhà đang ở",en:"Own home",uvi:"tr ₫",uen:"VND m"},
+    {k:"a_other",t:"num",vi:"Xe & tài sản khác",en:"Cars & other",uvi:"tr ₫",uen:"VND m",seg:["aff","hnw"]},
+    {k:"monthlySave",t:"num",vi:"Để dành / đầu tư mỗi tháng",en:"Saved or invested monthly",uvi:"tr ₫/tháng",uen:"VND m/mo"},
+    {k:"auto",t:"choice",vi:"Tiết kiệm tự động ngày nhận lương?",en:"Auto-saves on payday?",opts:[opt("yes","Có","Yes"),opt("no","Không","No")]},
+   ]},
+  {id:"borrow", icon:"borrow", pillar:"borrow", vi:"Vay nợ", en:"Borrow",
+   svi:"Gia đình đang có những khoản vay nào, còn nợ bao nhiêu và trả mỗi tháng bao nhiêu?",
+   sen:"Which loans does the family have, how much is left and what is paid monthly?",
+   wvi:"DSR nên ≤ 35%. Nợ thẻ, BNPL, vay tiêu dùng là nợ lãi cao cần xử lý trước.",
+   wen:"Keep DSR ≤ 35%. Cards, BNPL and consumer loans are costly debt to clear first.",
+   fields:[
+    {k:"l_home",t:"pair",vi:"Vay nhà / xe",en:"Home / car loan",seg:["mass","massaff"]},
+    {k:"l_card",t:"pair",vi:"Thẻ, BNPL, vay tiêu dùng",en:"Cards, BNPL, consumer loans",seg:["mass","massaff"]},
+    {k:"l_home",t:"pair",vi:"Vay mua nhà",en:"Mortgage",seg:["aff","hnw"]},
+    {k:"l_car",t:"pair",vi:"Vay mua xe",en:"Car loan",seg:["aff","hnw"]},
+    {k:"l_pers",t:"pair",vi:"Vay tín chấp / tiêu dùng",en:"Personal / consumer loan",seg:["aff","hnw"]},
+    {k:"l_card",t:"pair",vi:"Thẻ tín dụng / BNPL",en:"Credit card / BNPL",seg:["aff","hnw"]},
+    {k:"l_biz",t:"pair",vi:"Vay kinh doanh",en:"Business loan",seg:["aff","hnw"]},
+    {k:"l_margin",t:"pair",vi:"Margin chứng khoán",en:"Margin loan",seg:["aff","hnw"]},
+    {k:"onTime",t:"choice",vi:"Thanh toán đúng hạn?",en:"Pays on time?",opts:[opt("always","Luôn đúng hạn","Always"),opt("mostly","Thỉnh thoảng trễ","Sometimes late"),opt("late","Thường xuyên trễ","Often late")]},
+    {k:"credit",t:"choice",vi:"Lịch sử tín dụng (CIC)",en:"Credit history (CIC)",opts:[opt("good","Tốt","Good"),opt("fair","Có nợ nhóm 2","Watch-list debt"),opt("bad","Có nợ xấu","Bad debt"),opt("unknown","Chưa rõ","Unknown")]},
+   ]},
+  {id:"invest", icon:"invest", pillar:"invest", vi:"Hưu trí & đầu tư", en:"Retirement & investing",
+   svi:"Anh/chị muốn nghỉ hưu ở tuổi nào, và lúc đó muốn sống thế nào: tối giản, như bây giờ hay thoải mái hơn?",
+   sen:"When would you like to retire, and how do you want to live then: simpler, as now, or more comfortably?",
+   wvi:"Nhu cầu hưu = % chi tiêu hiện tại theo lối sống và phân khúc, trừ lương hưu BHXH và tiền thuê; quỹ cần có theo quy tắc rút 4%/năm.",
+   wen:"Retirement need = % of today's spending by lifestyle and segment, less state pension and rent; required pot via the 4% rule.",
+   fields:[
+    {k:"bs",t:"bs"},
+    {k:"retireAge",t:"num",vi:"Tuổi muốn nghỉ hưu",en:"Target retirement age",uvi:"tuổi",uen:"yrs"},
+    {k:"lifestyle",t:"lifestyle",vi:"Lối sống khi nghỉ hưu",en:"Retirement lifestyle"},
+    {k:"bhxhYears",t:"num",vi:"Số năm đóng BHXH đến lúc nghỉ",en:"Years of social insurance at retirement",uvi:"năm",uen:"yrs",seg:["mass","massaff"],hvi:"Đủ 15 năm mới có lương hưu",hen:"Pension needs at least 15 years"},
+    {k:"risk",t:"choice",vi:"Nếu danh mục giảm 20% trong một năm, anh/chị sẽ…",en:"If the portfolio fell 20% in a year, you would…",opts:[opt("conservative","Bán bớt để giữ an toàn","Sell to stay safe"),opt("balanced","Giữ nguyên, chờ hồi phục","Hold and wait"),opt("growth","Mua thêm","Buy more")]},
+   ]},
+  {id:"protect", icon:"protect", pillar:"protect", vi:"Bảo vệ", en:"Protect",
+   svi:"Nếu chẳng may anh/chị không thể đi làm vì ốm đau hoặc rủi ro, kế hoạch của gia đình và các con sẽ được đảm bảo như thế nào?",
+   sen:"If illness or an accident stopped you from working, how would the family's plans and the children's future be secured?",
+   wvi:"Nhu cầu nhân thọ tính theo nhu cầu thực: chi tiêu gia đình đến khi con tự lập + dư nợ + học vấn con − tài sản sẵn có; bệnh hiểm nghèo ≈ 3 lần thu nhập năm; có bảo hiểm sức khoẻ; có di chúc khi có người phụ thuộc hoặc tài sản lớn.",
+   wen:"Life need on a real-needs basis: family spending until children are independent + debts + education − existing assets; critical illness ≈ 3× annual income; health cover in place; a will once there are dependants or significant assets.",
+   fields:[
+    {k:"lifeCover",t:"num",vi:"Tổng số tiền bảo hiểm nhân thọ (tử vong)",en:"Total life cover (death benefit)",uvi:"tr ₫",uen:"VND m"},
+    {k:"ciCover",t:"num",vi:"Số tiền bảo hiểm bệnh hiểm nghèo",en:"Critical illness cover",uvi:"tr ₫",uen:"VND m"},
+    {k:"health",t:"choice",vi:"Bảo hiểm sức khoẻ",en:"Health insurance",opts:[opt("none","Chỉ BHXH/BHYT","Only state insurance"),opt("basic","Cơ bản","Basic"),opt("premium","Toàn diện / quốc tế","Comprehensive / international")]},
+    {k:"will",t:"choice",vi:"Đã có di chúc / kế hoạch thừa kế?",en:"Will or estate plan in place?",opts:[opt("yes","Có","Yes"),opt("no","Chưa","Not yet")]},
+    {k:"keyPerson",t:"choice",vi:"Doanh nghiệp có bảo hiểm người chủ chốt & kế hoạch kế nhiệm?",en:"Business has key-person cover & succession plan?",opts:[opt("yes","Có","Yes"),opt("no","Chưa","Not yet")],seg:["aff","hnw"],work:["owner"]},
+   ]},
+  {id:"report"},
+];
+
+const blankClient = () => ({id:null, segment:null, name:"", age:null, family:null, dependents:null, work:null, goals:[], holdings:[],
+  income:null, spouse:null, other:null, stability:null, essential:null, lifestyle:null, budget:null, liquid:null, monthlySave:null, auto:null,
+  debtPay:null, debtTotal:null, highInt:null, investable:null, pctCash:null, risk:null, retireAge:null, concentration:null,
+  lifeCover:null, ciCover:null, health:null, will:null, keyPerson:null, plan:null, onTime:null, credit:null, kids:[], parents:null, lifestyle:null, bhxhYears:null, notes:"", followUp:"", updatedAt:null});
+
+const DEMO = Object.assign(blankClient(), {id:"demo", demo:true, segment:"massaff", name:"Chị Lan", age:34, family:"kids", dependents:2, work:"salaried", goals:["home","education","retire"],
+  income:35, spouse:20, other:0, stability:"stable", essential:25, lifestyle:14, budget:"partly", liquid:60, monthlySave:6, auto:"no",
+  debtPay:12, debtTotal:420, highInt:35, investable:380, pctCash:85, risk:"balanced", retireAge:58, lifeCover:500, ciCover:0, health:"basic", will:"no",
+  notes:"", plan:"no", onTime:"mostly", credit:"good", updatedAt:"2026-09-20T09:00:00Z", holdings:["ccard","bnpl","consfin","termdep","gold","health"], concentration:0, other:0});
+
+/* ---------------- Vietnam product universe + curated top picks (as of 09/2026) ---------------- */
+const LOGO = {"fundiin.vn": "https://www.google.com/s2/favicons?domain=fundiin.vn&sz=64", "vib.com.vn": "https://www.google.com/s2/favicons?domain=vib.com.vn&sz=64", "fecredit.com.vn": "https://www.google.com/s2/favicons?domain=fecredit.com.vn&sz=64", "vps.com.vn": "https://www.google.com/s2/favicons?domain=vps.com.vn&sz=64", "ssi.com.vn": "https://www.google.com/s2/favicons?domain=ssi.com.vn&sz=64", "acb.com.vn": "https://www.google.com/s2/favicons?domain=acb.com.vn&sz=64", "vinacapital.com": "https://www.google.com/s2/favicons?domain=vinacapital.com&sz=64", "pacificcross.com.vn": "https://www.google.com/s2/favicons?domain=pacificcross.com.vn&sz=64", "dai-ichi-life.com.vn": "https://www.google.com/s2/favicons?domain=dai-ichi-life.com.vn&sz=64", "manulife.com.vn": "https://www.google.com/s2/favicons?domain=manulife.com.vn&sz=64", "techcombank.com": "https://www.google.com/s2/favicons?domain=techcombank.com&sz=64", "vcbf.com": "https://www.google.com/s2/favicons?domain=vcbf.com&sz=64"};
+const MONO = {msb:["MSB","#E0501E"],cic:["CIC","#0B4F8A"],vcb:["VCB","#007A33"],dc:["DC","#14325C"],bv:["BV","#0060AF"],agri:["AG","#A6192E"],sjc:["SJC","#B8912F"],mirae:["MA","#F58220"],pvi:["PVI","#005BAA"],aia:["AIA","#D31145"]};
+const PV = { // providers
+  fundiin:{n:"Fundiin",l:"fundiin.vn"}, vib:{n:"VIB",l:"vib.com.vn"}, fec:{n:"FE Credit",l:"fecredit.com.vn"}, vcb:{n:"Vietcombank",m:"vcb"},
+  tcb:{n:"Techcombank",l:"techcombank.com"}, acb:{n:"ACB",l:"acb.com.vn"}, agri:{n:"Agribank",m:"agri"}, vps:{n:"VPS",l:"vps.com.vn"}, ssi:{n:"SSI",l:"ssi.com.vn"},
+  dc:{n:"Dragon Capital",m:"dc"}, vina:{n:"VinaCapital",l:"vinacapital.com"}, mirae:{n:"Mirae Asset",m:"mirae"}, vcbf:{n:"VCBF",l:"vcbf.com"},
+  sjc:{n:"SJC",m:"sjc"}, msb:{n:"MSB",m:"msb"}, cic:{n:"CIC – NHNN",m:"cic"}, bv:{n:"Bảo Việt",m:"bv"}, bvl:{n:"Bảo Việt Nhân thọ",m:"bv"}, pc:{n:"Pacific Cross",l:"pacificcross.com.vn"},
+  dai:{n:"Dai-ichi Life",l:"dai-ichi-life.com.vn"}, manu:{n:"Manulife",l:"manulife.com.vn"}, aia:{n:"AIA Việt Nam",m:"aia"}, pvi:{n:"PVI",m:"pvi"},
+};
+const pk = (prov,pvi,pen,wvi,wen,src)=>({prov,pvi,pen,wvi,wen,src});
+const ALL=["mass","massaff","aff","hnw"], UP=["aff","hnw"];
+const P = (id,pillar,segs,vi,en,dvi,den,pick,alt,work)=>({id,pillar,segs,vi,en,dvi,den,pick,alt,work});
+const CATALOG = [
+  // EARN
+  P("merchant","earn",ALL,"Vốn lưu động hộ kinh doanh","Micro-business working capital","Hạn mức vốn lưu động, tách tài khoản kinh doanh – cá nhân.","Working-capital lines; separate business and personal money.",null,null,["self","owner"]),
+  // BORROW
+  P("bnpl","borrow",["mass","massaff","aff"],"Mua trước trả sau (BNPL)","Buy now, pay later","Chia 3–4 kỳ, 0% nếu trả đúng hạn; hợp cho khoản chi có kế hoạch.","3–4 instalments, 0% if paid on time; for planned purchases.",
+    pk("fundiin","Fundiin Trả sau","Fundiin PayLater","Nhóm dẫn đầu thị trường BNPL Việt Nam, mạng lưới merchant online & offline rộng","Among Vietnam's leading BNPL providers, wide online/offline merchant network","ResearchAndMarkets 2025")),
+  P("ccard","borrow",ALL,"Thẻ tín dụng hoàn tiền","Cashback credit card","Miễn lãi ~45–55 ngày nếu trả đủ; chỉ trả tối thiểu thì lãi rất cao.","Interest-free ~45–55 days if paid in full; costly on minimum payments.",
+    pk("vib","VIB Cash Back","VIB Cash Back","Hoàn tiền đến 10%, trần 2 triệu/kỳ sao kê – thuộc nhóm hoàn tiền cao nhất","Up to 10% cashback, capped at VND 2m per statement","Tổng hợp 2026"),
+    pk("tcb","Techcombank Visa Signature","Techcombank Visa Signature","Hoàn đến 10%, trần 5 triệu/tháng cho chi tiêu lớn","Up to 10%, capped VND 5m/month for heavy spenders","Tổng hợp 2026")),
+  P("consfin","borrow",["mass","massaff"],"Vay tiêu dùng","Consumer loan","Duyệt nhanh, hồ sơ đơn giản, lãi suất cao. Chỉ dùng khi thật cần.","Fast approval, high rates. Use only when necessary.",
+    pk("fec","Vay tiền mặt FE Credit","FE Credit cash loan","3 năm liền dẫn đầu Top 5 công ty tài chính tiêu dùng uy tín","No.1 in Vietnam's Top 5 reputable consumer finance companies, three years running","Vietnam Report 2026")),
+  P("ploan","borrow",["mass","massaff","aff"],"Vay tín chấp theo lương","Salary-based personal loan","Lãi thấp hơn công ty tài chính; dùng để hợp nhất nợ thẻ, nợ tiêu dùng.","Cheaper than consumer finance; consolidates card and consumer debt.",
+    pk("vcb","Vay tín chấp theo lương Vietcombank","Vietcombank salary loan","Lãi suất thuộc nhóm thấp nhất thị trường cho khách nhận lương","Among the lowest unsecured rates for salaried borrowers","Vietcombank 2025")),
+  P("overdraft","borrow",["massaff","aff","hnw"],"Thấu chi / hạn mức (cash line)","Overdraft / cash line","Hạn mức quay vòng, chỉ trả lãi phần đã dùng; thấu chi có sổ tiết kiệm bảo đảm lãi thấp.","Revolving; interest only on usage; deposit-secured overdrafts are cheaper.",
+    pk("vcb","Thấu chi tài khoản Vietcombank","Vietcombank overdraft","Hạn mức theo lương hoặc có tài sản bảo đảm, lãi cạnh tranh","Salary-based or secured lines at competitive rates","Vietcombank")),
+  P("cardconv","borrow",ALL,"Chuyển dư nợ thẻ sang trả góp","Card balance to instalments","Đổi dư nợ thẻ quay vòng (~30%+/năm) sang trả góp cố định 3–24 tháng; ngưng dùng thẻ trong thời gian trả góp.","Turn revolving card debt (~30%+/yr) into fixed 3–24 month instalments; card frozen meanwhile.",
+    pk("msb","MSB – Chuyển dư nợ thẻ sang trả góp","MSB balance-to-instalment","Áp dụng cho dư nợ đã lên sao kê; lãi 0,8–1,3%/tháng, phí 3–5%","Works on billed balances; 0.8–1.3% a month, 3–5% fee","MSB 2026")),
+  P("refi","borrow",["massaff","aff","hnw"],"Tái tài trợ / kéo dài kỳ hạn vay nhà","Mortgage refinance / term extension","Chuyển khoản vay nhà sang lãi thấp hơn hoặc kéo dài kỳ hạn để giảm trả góp tháng; không vay thêm.","Move the home loan to a lower rate or longer term to cut monthly payments; no new borrowing.",
+    pk("vib","VIB – vay nhà cố định 60 tháng","VIB home loan, 60-month fix","Cố định lãi 60 tháng giúp khoá khoản trả hằng tháng khi tái tài trợ","60-month fixed rate locks the monthly payment when refinancing","Vietbao 09/2026"),
+    pk("vcb","Vietcombank – kỳ hạn đến 35 năm","Vietcombank – up to 35 years","Kéo dài kỳ hạn để giảm DSR","Longer tenor to lower DSR","Vietbao 09/2026")),
+  P("autopay","borrow",ALL,"Trích nợ & thanh toán hoá đơn tự động","Auto-debit & bill auto-pay","Cài trích nợ tự động thẻ tín dụng, khoản vay, hoá đơn từ tài khoản nhận lương.","Set up auto-debit for cards, loans and bills from the salary account.",
+    pk("tcb","Techcombank – thanh toán tự động trên app","Techcombank app auto-pay","Tài khoản nhận lương + sinh lời tự động, trích nợ đúng ngày","Salary account with auto-earning and on-time auto-debit","Techcombank")),
+  P("cic","borrow",ALL,"Tra cứu & theo dõi tín dụng CIC","CIC credit report","Kiểm tra khoản nợ xấu, xác nhận tất toán và theo dõi điểm tín dụng.","Check bad-debt records, confirm settlement and track the score.",
+    pk("cic","CIC Credit Connect","CIC Credit Connect","Ứng dụng chính thức của Trung tâm Thông tin Tín dụng Quốc gia (NHNN)","Official app of the National Credit Information Centre (SBV)","CIC")),
+  P("depositloan","borrow",ALL,"Vay cầm cố sổ tiết kiệm","Loan against deposits","Có tiền ngay mà không tất toán sổ; lãi ≈ lãi tiết kiệm + biên độ.","Cash without breaking a deposit; deposit rate plus a margin.",
+    pk("acb","Cầm cố sổ tiết kiệm ACB","ACB deposit-backed loan","Gửi tại ACB (lãi 12 tháng cao nhất) và cầm cố ngay khi cần","Save at ACB (top 12-month rate) and borrow against it when needed","VnEconomy 09/2026")),
+  P("mortgage","borrow",["massaff","aff","hnw"],"Vay mua nhà","Home loan","Kỳ hạn 20–35 năm; ưu đãi cố định rồi thả nổi (biên độ ~3,3–3,5%).","20–35 years; teaser fixed rate then floating (margin ~3.3–3.5%).",
+    pk("vib","Vay mua nhà VIB – cố định 60 tháng","VIB home loan, 60-month fix","Thời gian cố định lãi dài nhất thị trường (60 tháng), giảm rủi ro thả nổi","Longest fixed-rate period on the market (60 months)","Vietbao 09/2026"),
+    pk("vcb","Gói 20.000 tỷ Vietcombank","Vietcombank VND 20trn package","Kỳ hạn đến 35 năm, lãi thấp hơn chuẩn đến 1%/năm","Up to 35 years, up to 1pt below standard rate","Vietbao 09/2026")),
+  P("carloan","borrow",["massaff","aff"],"Vay mua ô tô","Car loan","Thế chấp chính chiếc xe, thường tài trợ 70–80%.","Secured on the car, typically 70–80% financing.",
+    pk("acb","Vay mua ô tô ACB","ACB car loan","Lãi từ 5,2%/năm, kỳ hạn đến 84 tháng","From 5.2% a year, up to 84 months","Topi 09/2026"),
+    pk("agri","Vay mua ô tô Agribank","Agribank car loan","Lãi từ khoảng 4,5%/năm, tài trợ đến 100%","From about 4.5% a year, up to 100% financing","Topi 09/2026")),
+  P("margin","borrow",UP,"Giao dịch ký quỹ (margin)","Margin lending","Vay CTCK mua cổ phiếu, tối đa 50%; rủi ro bị bán giải chấp.","Broker loan up to 50%; forced-selling risk.",
+    pk("vps","Margin VPS","VPS margin","Thị phần môi giới HOSE số 1 (12,61%, Q2/2026)","No.1 HOSE brokerage share (12.61%, Q2 2026)","Vietnambiz 07/2026"),
+    pk("ssi","Margin SSI","SSI margin","Thị phần số 2 (11,17%)","No.2 share (11.17%)","Vietnambiz 07/2026")),
+  P("lombard","borrow",["hnw"],"Vay cầm cố danh mục (Lombard)","Portfolio-backed loan","Vay trên danh mục thay vì bán, giữ vị thế đầu tư.","Borrow against the portfolio instead of selling.",
+    pk("tcb","Techcombank Private – tín dụng cầm cố tài sản","Techcombank Private credit","Private banking từ 23 tỷ AUM, tín dụng trên tài sản tài chính","Private banking from VND 23bn AUM with asset-backed credit","CafeF")),
+  P("bizloan","borrow",ALL,"Vay vốn hộ kinh doanh / SME","Business / SME loan","Vốn lưu động, hạn mức; tách khỏi nợ cá nhân.","Working capital kept apart from personal debt.",null,null,["self","owner"]),
+  // SAVE
+  P("casa","save",ALL,"Tài khoản sinh lời tự động","Auto-earning current account","Tiền nhàn rỗi tự sinh lời hằng ngày, rút ngay; lớp 1 của quỹ dự phòng.","Idle cash earns daily and stays available; first buffer layer.",
+    pk("tcb","Techcombank Sinh lời tự động","Techcombank Auto-earning","Tiên phong và phổ biến nhất, tự sinh lời trên số dư thanh toán","Pioneer and most widely used auto-earning current account","Techcombank")),
+  P("termdep","save",ALL,"Tiết kiệm có kỳ hạn","Term deposit","An toàn, lãi cố định; chia bậc thang 1–3–6–12 tháng.","Safe, fixed; ladder 1–3–6–12 months.",
+    pk("acb","Tiết kiệm online ACB 12 tháng","ACB 12-month online deposit","7,8%/năm – cao nhất kỳ hạn 12 tháng (không kèm điều kiện đặc biệt)","7.8% a year – highest standard 12-month rate","VnEconomy 09/2026"),
+    pk("acb","ACB 6 tháng","ACB 6-month","7,6%/năm – cao nhất kỳ hạn 6 tháng","7.6% – highest 6-month rate","VnEconomy 09/2026")),
+  P("recsave","save",["mass","massaff","aff"],"Tiết kiệm tích luỹ định kỳ","Recurring savings","Trích tự động hằng tháng theo mục tiêu.","Automatic monthly transfers to a goal.",
+    pk("acb","Tiết kiệm tích luỹ ACB","ACB recurring savings","Ngân hàng trả lãi tiết kiệm cao nhất nhóm lớn","Top deposit rates among major banks","VnEconomy 09/2026")),
+  P("mmf","save",ALL,"Quỹ thị trường tiền tệ","Money market fund","Rút 1–2 ngày, lợi suất thường cao hơn không kỳ hạn; chọn quỹ có danh mục tiền gửi & giấy tờ có giá ngắn hạn.","1–2 day redemption; pick funds holding deposits and short paper.",null),
+  P("gold","save",ALL,"Vàng miếng","Gold bars","Trú ẩn truyền thống; chênh lệch mua–bán lớn, không tạo dòng tiền – giới hạn tỷ trọng.","Traditional haven; wide spread, no income – keep limited.",
+    pk("sjc","Vàng miếng SJC","SJC gold bar","Thương hiệu vàng miếng quốc gia, thanh khoản cao nhất","National gold-bar brand, most liquid","SBV")),
+  // INVEST
+  P("sip","invest",["mass","massaff","aff"],"Đầu tư định kỳ (SIP)","Regular investment plan","Góp cố định hằng tháng vào quỹ, trung bình giá, tạo kỷ luật.","Fixed monthly contributions; averages cost.",
+    pk("dc","SIP quỹ DCDS","DCDS SIP","DCDS: lợi nhuận 3 năm 70,36%, cao nhất nhóm quỹ cổ phiếu","DCDS: 3-year return 70.36%, top equity fund","Fmarket 07/2026")),
+  P("oef","invest",ALL,"Quỹ mở cổ phiếu","Equity fund","Quản lý chuyên nghiệp, đa dạng hoá; nắm giữ ≥ 3–5 năm.","Professionally managed and diversified; hold 3–5+ years.",
+    pk("dc","Quỹ DCDS – Dragon Capital","DCDS – Dragon Capital","Hiệu suất 3 năm 70,36% – dẫn đầu nhóm cổ phiếu","3-year return 70.36% – top of equity funds","Fmarket 07/2026"),
+    pk("mirae","Quỹ MAGEF – Mirae Asset","MAGEF – Mirae Asset","12 tháng +25,5% (cao nhất), 3 năm +64,08%","12-month +25.5% (highest), 3-year +64.08%","Fmarket 07/2026")),
+  P("bondfund","invest",ALL,"Quỹ trái phiếu","Bond fund","Thu nhập ổn định 7–8%/năm, biến động thấp.","Steady 7–8% a year, low volatility.",
+    pk("vina","Quỹ VFF – VinaCapital","VFF – VinaCapital","Lợi nhuận 12 tháng 7,81% – cao nhất nhóm trái phiếu","12-month 7.81% – top bond fund","Fmarket 05/2026"),
+    pk("dc","Quỹ DCBF – Dragon Capital","DCBF – Dragon Capital","12 tháng 7,48%","12-month 7.48%","Fmarket 05/2026")),
+  P("etf","invest",["massaff","aff","hnw"],"Quỹ ETF niêm yết","Listed ETF","Phí thấp, giao dịch như cổ phiếu trên HOSE; dùng làm lõi danh mục cổ phiếu.","Low cost, traded on HOSE; a core equity holding.",
+    pk("dc","E1VFVN30 (DCVFMVN30)","E1VFVN30 (DCVFMVN30)","Bám VN30 – 30 doanh nghiệp lớn nhất, đa dạng hơn, phù hợp làm lõi danh mục; NAV 6.127 tỷ","Tracks VN30 – broad blue-chip core; NAV VND 6.1trn","Người Quan Sát 07/2026"),
+    pk("dc","FUEVFVND (DCVFMVN Diamond)","FUEVFVND (DCVFMVN Diamond)","NAV lớn nhất (11.795 tỷ) nhưng tập trung nhóm cổ phiếu hết room ngoại – dùng làm vệ tinh","Largest NAV (VND 11.8trn) but concentrated in foreign-room-full stocks – satellite only","Người Quan Sát 07/2026")),
+  P("stocks","invest",["massaff","aff","hnw"],"Tài khoản chứng khoán","Brokerage account","Tự đầu tư cổ phiếu; cần kiến thức và kỷ luật rủi ro.","Direct share investing; needs discipline.",
+    pk("vps","VPS","VPS","Thị phần môi giới HOSE số 1 (Q2/2026)","No.1 HOSE brokerage (Q2 2026)","Vietnambiz 07/2026"),
+    pk("ssi","SSI","SSI","Số 2, hệ sinh thái đầu tư đầy đủ","No.2 with a full investment ecosystem","Vietnambiz 07/2026")),
+  P("pension","invest",["massaff","aff","hnw"],"Quỹ hưu trí bổ sung tự nguyện","Voluntary pension fund","Tích luỹ hưu trí dài hạn, được giảm trừ thuế TNCN; doanh nghiệp có thể cùng đóng.","Long-term retirement savings with PIT relief; employers can co-contribute.",
+    pk("vcbf","Quỹ hưu trí VCBF-CB","VCBF-CB pension fund","Vietcombank × Franklin Templeton; giảm trừ thuế TNCN đến 3 tr/tháng","Vietcombank × Franklin Templeton; PIT deduction up to VND 3m/month","VCBF")),
+  P("priority","invest",["massaff","aff"],"Ngân hàng ưu tiên","Priority banking","Chuyên viên riêng, ưu đãi giá và sản phẩm.","Dedicated RM and preferential pricing.",
+    pk("vcb","Vietcombank Priority","Vietcombank Priority","Điều kiện rõ: thu nhập ≥ 50 tr/tháng hoặc số dư ≥ 2 tỷ","Clear entry: income ≥ VND 50m/month or balance ≥ VND 2bn","CafeF")),
+  P("discretionary","invest",UP,"Uỷ thác quản lý danh mục","Discretionary mandate","Danh mục riêng theo mục tiêu, báo cáo định kỳ.","Dedicated portfolio with regular reporting.",
+    pk("dc","Uỷ thác đầu tư Dragon Capital","Dragon Capital mandate","CTQLQ lớn nhất Việt Nam, hiệu suất quỹ cổ phiếu dẫn đầu 3 năm","Largest manager; top 3-year equity performance","Finhay 2026"),
+    pk("vina","VinaCapital Wealth","VinaCapital Wealth","Top 2 CTQLQ, mạnh cả trái phiếu (VFF)","Top-2 manager, strong in fixed income","Finhay 2026")),
+  P("govbond","invest",UP,"Trái phiếu Chính phủ / niêm yết","Government & listed bonds","Thu nhập cố định, rủi ro tín dụng thấp.","Fixed income, low credit risk.",
+    pk("ssi","Giao dịch trái phiếu qua SSI","Bonds via SSI","Top 2 thị phần môi giới","Top-2 brokerage","Vietnambiz 07/2026")),
+  P("pro_bond","invest",["hnw"],"Trái phiếu doanh nghiệp riêng lẻ","Private corporate bonds","Chỉ cho nhà đầu tư chuyên nghiệp (danh mục ≥ 2 tỷ hoặc thu nhập chịu thuế ≥ 1 tỷ/năm). Thẩm định từng tổ chức phát hành, không đề cử chung.","Professional investors only. Assess each issuer; no blanket pick.",null),
+  P("memberfund","invest",["hnw"],"Quỹ thành viên","Member fund","2–99 NĐT chuyên nghiệp, vốn tối thiểu 50 tỷ; chiến lược riêng.","2–99 professional investors, min VND 50bn; bespoke.",
+    pk("dc","Quỹ thành viên do Dragon Capital quản lý","Dragon Capital member fund","CTQLQ lớn nhất, năng lực quản lý đã kiểm chứng","Largest manager with proven track record","Finhay 2026"),
+    pk("vina","Quỹ thành viên VinaCapital","VinaCapital member fund","Top 2 CTQLQ","Top-2 manager","Finhay 2026")),
+  P("private","invest",["hnw"],"Private banking","Private banking","Tư vấn tổng thể tài sản, tín dụng, thừa kế.","Holistic wealth, credit and succession advice.",
+    pk("tcb","Techcombank Private","Techcombank Private","Ngưỡng từ 23 tỷ AUM / 25 tỷ TRV","From VND 23bn AUM / 25bn TRV","CafeF")),
+  P("re","invest",UP,"Bất động sản cho thuê","Rental property","Dòng tiền và tăng giá dài hạn; thanh khoản thấp.","Income plus appreciation; illiquid.",null),
+  P("alts","invest",["hnw"],"Tài sản thay thế (PE/VC)","Alternatives (PE/VC)","Kỳ hạn dài, thanh khoản thấp; chỉ phần nhỏ danh mục.","Long lock-ups; a small slice only.",null),
+  P("balfund","invest",ALL,"Quỹ cân bằng","Balanced fund","Kết hợp cổ phiếu và trái phiếu, biến động vừa phải; hợp khẩu vị cân bằng, kỳ hạn 3–5 năm.","Mix of equities and bonds; moderate volatility for a 3–5 year horizon.",
+    pk("vcbf","Quỹ VCBF-TBF","VCBF-TBF fund","Lợi nhuận bình quân 3 năm +10,13%/năm – cao nhất nhóm quỹ cân bằng","3-year average +10.13% a year – top balanced fund","CafeF 2026"),
+    pk("vina","Quỹ VIBF – VinaCapital","VIBF – VinaCapital","Bình quân 3 năm +7,68%/năm","3-year average +7.68% a year","CafeF 2026")),
+  // PROTECT
+  P("health","protect",ALL,"Bảo hiểm sức khoẻ","Health insurance","Nội trú, ngoại trú, phẫu thuật ngoài BHYT; mua cho cả gia đình.","Inpatient, outpatient, surgery beyond state cover.",
+    pk("bv","Bảo Việt An Gia","Bao Viet An Gia","Thương hiệu bảo hiểm lâu đời, mạng lưới bảo lãnh viện phí rộng, hợp gia đình","Most established insurer, wide direct-billing network, family plans","Tổng hợp 2026"),
+    pk("pvi","PVI Care","PVI Care","Top phi nhân thọ, nhiều gói linh hoạt","Top non-life insurer, flexible tiers","Tổng hợp 2026")),
+  P("healthintl","protect",UP,"Sức khoẻ cao cấp / quốc tế","Premium / international health","Hạn mức cao, bệnh viện quốc tế, phạm vi toàn cầu.","High limits, international hospitals.",
+    pk("pc","Pacific Cross","Pacific Cross","Chuyên sức khoẻ cao cấp, có chương trình phạm vi toàn cầu kể cả Mỹ","Premium health specialist, worldwide plans incl. USA","Pacific Cross")),
+  P("accident","protect",["mass","massaff"],"Bảo hiểm tai nạn","Personal accident","Phí thấp, lớp bảo vệ cơ bản.","Low premium, basic safety net.",
+    pk("bv","Bảo Việt – Tai nạn con người","Bao Viet personal accident","Phí thấp, mạng lưới bồi thường rộng","Low premium, wide claims network","Bảo Việt")),
+  P("term","protect",ALL,"Bảo hiểm tử kỳ","Term life","Phí thấp, mệnh giá cao, thay thế thu nhập.","Low premium, high cover.",
+    pk("bvl","Bảo Việt Nhân thọ","Bao Viet Life","Số 1 doanh thu khai thác mới 4T/2026 (1.445 tỷ)","No.1 new-business premium, 4M 2026 (VND 1.445trn)","CafeF 05/2026")),
+  P("ci","protect",ALL,"Bảo hiểm bệnh hiểm nghèo","Critical illness","Chi trả một lần khi chẩn đoán, bù thu nhập khi điều trị.","Lump sum on diagnosis.",
+    pk("dai","Dai-ichi Life","Dai-ichi Life","Top 2 khai thác mới 4T/2026","Top-2 new business, 4M 2026","CafeF 05/2026"),
+    pk("aia","AIA Việt Nam","AIA Vietnam","Top 3 khai thác mới","Top-3 new business","CafeF 05/2026")),
+  P("ul","protect",["massaff","aff","hnw"],"Bảo hiểm liên kết chung (UL)","Universal life","Bảo vệ + tích luỹ với lãi suất tối thiểu đảm bảo.","Protection plus savings with a guaranteed minimum.",
+    pk("manu","Manulife","Manulife","Top 4 khai thác mới, mạnh dòng liên kết chung","Top-4 new business, strong in universal life","CafeF 05/2026")),
+  P("ilp","protect",UP,"Bảo hiểm liên kết đơn vị (ILP)","Investment-linked insurance","Chỉ khi khách hiểu rủi ro đầu tư. Ngân hàng không được bán trong 60 ngày trước/sau giải ngân vay (TT 67/2023). Không đề cử chung.","Only if the client understands investment risk; banks cannot sell within 60 days of a loan (Circular 67/2023). No blanket pick.",null),
+  P("creditlife","protect",["massaff","aff","hnw"],"Bảo hiểm khoản vay","Credit life","Trả dư nợ nếu người vay gặp rủi ro.","Clears the loan if the borrower dies.",null),
+  P("property","protect",["massaff","aff","hnw"],"Bảo hiểm nhà & tài sản","Home & property","Bảo vệ tài sản lớn nhất trước cháy nổ, thiên tai.","Protects the largest asset.",
+    pk("bv","Bảo Việt – Bảo hiểm nhà tư nhân","Bao Viet home insurance","Doanh nghiệp bảo hiểm lớn, mạng lưới giám định toàn quốc","Large insurer with nationwide loss adjusters","Bảo Việt")),
+  P("keyperson","protect",UP,"Bảo hiểm người chủ chốt","Key-person insurance","Doanh nghiệp được chi trả khi mất người chủ chốt.","Pays the business if a key person is lost.",
+    pk("aia","AIA – Bảo hiểm doanh nghiệp","AIA corporate solutions","Top 3 nhân thọ, có giải pháp cho doanh nghiệp","Top-3 life insurer with corporate solutions","CafeF 05/2026"),null,["owner"]),
+  P("will","protect",ALL,"Di chúc & người thụ hưởng","Will & beneficiaries","Lập di chúc công chứng, cập nhật người thụ hưởng trên hợp đồng.","Notarised will; keep beneficiaries current.",null),
+  P("succession","protect",["hnw"],"Kế hoạch kế thừa & cấu trúc sở hữu","Succession structuring","Công ty nắm giữ, thoả thuận cổ đông; làm cùng luật sư, tư vấn thuế.","Holding company, shareholder agreements with lawyers.",null),
+];
+const PROD = Object.fromEntries(CATALOG.map(p=>[p.id,p]));
+const prodFits = (p,c)=> p.segs.includes(c.segment) && (!p.work || p.work.includes(c.work));
+/* Needs → products: rule-based, segment/risk/eligibility aware */
+function riskFunds(c,years,why){
+  const r=c.risk||"balanced", seg=c.segment;
+  if(years<5 || r==="conservative") return [["bondfund",why(L("Kỳ hạn ngắn hoặc khẩu vị thận trọng: ưu tiên thu nhập ổn định","Short horizon or cautious profile: steady income first"))]].concat(seg!=="mass"?[["balfund",why(L("Có thể thêm một phần quỹ cân bằng","Optionally add a balanced fund slice"))]]:[]);
+  if(r==="balanced") return [["balfund",why(L("Khẩu vị cân bằng: cổ phiếu + trái phiếu trong một quỹ","Balanced profile: equities and bonds in one fund"))]].concat(seg==="mass"?[["sip",why(L("Góp định kỳ nhỏ vào quỹ cổ phiếu để tăng trưởng","Small regular equity contributions for growth"))]]:[["etf",why(L("ETF VN30 làm lõi cổ phiếu chi phí thấp","VN30 ETF as a low-cost equity core"))]]);
+  return [["oef",why(L("Khẩu vị tăng trưởng, kỳ hạn dài: quỹ cổ phiếu hiệu suất cao","Growth profile, long horizon: top equity fund"))]].concat(seg==="mass"?[["sip",why(L("Đầu tư định kỳ để trung bình giá","Regular investing to average cost"))]]:[["etf",why(L("Bổ sung ETF VN30 làm lõi","Add a VN30 ETF core"))]]);
+}
+function productsFor(n,c,needs,m){
+  const seg=c.segment, up=seg==="aff"||seg==="hnw", I=m.I;
+  const years=Math.max(0,n0(c.retireAge)-n0(c.age));
+  const hasLoan=n0(c.debtTotal)>0, mortgageLike=n0(c.debtTotal)>I*24;
+  const pro=n0(c.investable)*(1-n0(c.pctCash)/100)>=2000;           // proxy for professional-investor test (≥ VND 2bn listed portfolio)
+  const why=t=>t; let list=[];
+  switch(n.pillar+":"+n.order){
+    case "spend:2": list=[["recsave",L("Trích tiết kiệm ngay ngày nhận lương – 'trả cho mình trước'","Save on payday first")],["casa",L("Tách tài khoản chi tiêu và tiền để dành, phần dư tự sinh lời","Separate spending money from savings; surplus earns daily")]]; break;
+    case "save:3": list=[["casa",L("Lớp 1: tiền dùng ngay, vẫn sinh lời hằng ngày","Layer 1: instant access, earns daily")],["termdep",L("Lớp 2: bậc thang kỳ hạn 1–3–6 tháng cho phần còn lại","Layer 2: 1–3–6 month ladder for the rest")]]; break;
+    case "save:7": list = needs.some(x=>x.pillar==="save"&&x.order===3)? [["recsave",L("Tự động trích tiết kiệm tới khi đủ quỹ dự phòng","Automate saving until the buffer is full")]] : riskFunds(c,years,why).slice(0,2); break;
+    case "borrow:1": {
+      const canBank = c.credit!=="bad" && (c.work==="salaried"||up);
+      list = c.credit==="bad"? [] : [["cardconv",L("Giảm ngay lãi thẻ quay vòng xuống lãi trả góp cố định","Cut revolving card interest to a fixed instalment rate")]];
+      if(canBank) list.unshift(["ploan",L("Hợp nhất nợ lãi cao vào một khoản lãi thấp hơn, kỳ hạn rõ ràng","Consolidate costly debt into one cheaper, fixed-term loan")]);
+      if(n0(c.liquid)>n0(c.highInt)+ (n0(c.essential)+n0(c.debtPay))) list.push(["depositloan",L("Có sẵn tiền gửi: dùng tiền gửi/cầm cố sổ để trả nợ lãi cao thay vì giữ tiết kiệm lãi thấp","Has deposits: use or pledge them to clear costly debt")]);
+      break; }
+    case "borrow:1.5": list=[["autopay",L("Không bao giờ trễ hạn nhờ trích nợ tự động","Never miss a due date with auto-debit")]]; break;
+    case "borrow:1.2": list=[["cic",L("Kiểm tra chi tiết nợ xấu và theo dõi sau tất toán","Check bad-debt details and track after settlement")]]; break;
+    case "borrow:6": list = [["refi", mortgageLike? L("Giảm trả góp tháng bằng lãi thấp hơn/kỳ hạn dài hơn","Lower the monthly payment via rate or tenor") : L("Kéo dài kỳ hạn các khoản vay lớn để đưa DSR về dưới 35%","Extend large loans to bring DSR under 35%")]].concat(n0(c.highInt)>0?[["cardconv",L("Đổi nợ thẻ sang trả góp để giảm lãi","Convert card debt to instalments")]]:[]); break;
+    case "protect:4": list = up? [["healthintl",L("Hạn mức cao, bệnh viện quốc tế – tương xứng mức sống","High limits and international hospitals to match lifestyle")],["health",L("Phương án tiết kiệm phí","Lower-premium option")]] : [["health",L("Bảo vệ chi phí y tế cho cả gia đình","Covers family medical costs")]]; break;
+    case "protect:5": list=[["term",L("Mệnh giá cao nhất trên mỗi đồng phí – lấp khoảng thiếu hụt nhanh nhất","Most cover per dong – closes the gap fastest")]];
+      if(seg!=="mass") list.push(["ul",L("Kết hợp tích luỹ nếu muốn giữ phí đều dài hạn","Adds savings if a long-term premium suits")]);
+      if(hasLoan) list.push(["creditlife",L("Dư nợ được trả nếu rủi ro xảy ra","Clears the loan if the worst happens")]); break;
+    case "protect:5.5": list=[["ci",L("Chi trả một lần khi chẩn đoán, bù thu nhập khi điều trị","Lump sum on diagnosis to replace income")]]; break;
+    case "protect:9": list=[["will",L("Việc cần làm ngay, chi phí thấp","Low-cost, do it now")]].concat(seg==="hnw"?[["succession",L("Cấu trúc sở hữu cho tài sản lớn","Ownership structure for large estates")]]:[]); break;
+    case "protect:8.5": list=[["keyperson",L("Bảo vệ dòng tiền doanh nghiệp khi mất người chủ chốt","Protects business cash flow")],["succession",L("Thoả thuận cổ đông & kế nhiệm","Shareholder and succession agreements")]]; break;
+    case "invest:7": list=(seg!=="mass"?[["pension",L("Ưu đãi thuế TNCN, khoá dài hạn đúng mục tiêu hưu trí","PIT relief and a lock-in that fits retirement")]]:[]).concat(riskFunds(c,years,why));
+      if(up) list.push(["discretionary",L("Uỷ thác để danh mục được quản lý chủ động","Delegate active portfolio management")]);
+      if(seg==="hnw") list.push(["private",L("Quản lý tài sản tổng thể","Holistic wealth management")]); break;
+    case "invest:8": list=riskFunds(c,years,why).concat(up?[["govbond",L("Thay một phần tiền gửi bằng trái phiếu Chính phủ","Swap part of deposits into government bonds")]]:[]); break;
+    case "invest:8.2": list=[["discretionary",L("Giảm tập trung theo lộ trình có kỷ luật","Staged, disciplined de-concentration")],["etf",L("Phân bổ lại sang rổ VN30 đa dạng","Rebalance into the diversified VN30 basket")]];
+      if(seg==="hnw"&&pro&&m.dsr<=.35) list.push(["lombard",L("Vay trên danh mục thay vì bán gấp","Borrow against holdings instead of fire-selling")],["memberfund",L("Đủ điều kiện NĐT chuyên nghiệp: chiến lược riêng","Qualifies as professional investor: bespoke strategy")]); break;
+    case "invest:7.5": list=riskFunds(c,years,why); break;
+    case "invest:7.2": list=riskFunds(c,m.eduMinYears||10,why).concat([["recsave",L("Trích tự động riêng cho quỹ học vấn","Automatic transfers for the education fund")]]); break;
+    case "earn:10": list=[["term",L("Bảo vệ nguồn thu nhập duy nhất","Protects the only income")]]; break;
+    case "earn:10.5": list=[["casa",L("Giữ phần dư các tháng cao điểm, sinh lời hằng ngày","Park peak-month surplus, earning daily")],["termdep",L("Bậc thang kỳ hạn làm quỹ san phẳng thu nhập","Deposit ladder to smooth income")]]; break;
+    case "earn:10.8": list=[["bondfund",L("Dòng tiền ổn định từ trái phiếu","Steady income from bonds")]].concat(up?[["govbond",L("Thu nhập cố định rủi ro thấp","Low-risk fixed income")]]:[]); break;
+  }
+  const urgent = needs.some(x=>(x.sev==="critical"||x.sev==="high") && ["borrow:1","borrow:1.2","save:3","protect:4"].includes(x.pillar+":"+x.order));
+  n.deferred = n.pillar==="invest" && urgent;
+  const seen=new Set();
+  return list.map(([id,fit])=>({p:PROD[id],fit})).filter(o=>o.p&&prodFits(o.p,c)&&!seen.has(o.p.id)&&seen.add(o.p.id)).slice(0,3);
+}
+function logoHTML(provKey,size){ const p=PV[provKey]; if(!p) return ""; size=size||34;
+  if(p.l && LOGO[p.l]) return `<img class="plogo" src="${LOGO[p.l]}" width="${size}" height="${size}" alt="${esc(p.n)}">`;
+  const m=MONO[p.m]||[p.n.slice(0,2).toUpperCase(),"#455560"]; return `<span class="plogo mono" style="width:${size}px;height:${size}px;background:${m[1]};font-size:${m[0].length>2?9.5:11.5}px">${m[0]}</span>`; }
+function pickHTML(pr,alt){ if(!pr) return ""; const p=PV[pr.prov];
+  return `<div class="pick${alt?" alt":""}">${logoHTML(pr.prov,alt?26:36)}<div class="pk"><b>${esc(L(pr.pvi,pr.pen))}</b><small>${esc(L(pr.wvi,pr.wen))}</small></div></div>`; }
+function productCardHTML(p,have,fit){
+  return `<div class="pp">${p.pick? pickHTML(p.pick) : `<div class="pick"><span class="plogo mono" style="width:36px;height:36px;background:var(--riverbed)">•</span><div class="pk"><b>${esc(L(p.vi,p.en))}</b><small>${esc(L(p.dvi,p.den))}</small></div></div>`}
+   ${fit?`<p class="fit">${esc(fit)}</p>`:""}${have?`<span class="tag have">${L("Đang có","In place")}</span>`:""}
+   ${p.alt?`<details class="altd"><summary>${L("Lựa chọn khác","Alternative")}</summary>${pickHTML(p.alt,true)}</details>`:""}</div>`; }
+
+/* ---------------- Vietnam-context assumptions per segment ---------------- */
+const DEFAULTS = {
+  mass:   {age:28, family:"couple", dependents:1, work:"salaried", income:12, spouse:0, other:0, stability:"stable", essential:8, lifestyle:2.5, budget:"partly",
+           liquid:15, monthlySave:1, auto:"no", debtPay:2, debtTotal:20, highInt:10, investable:30, pctCash:90, risk:"conservative", retireAge:60, concentration:0,
+           lifeCover:0, ciCover:0, health:"none", will:"no", parents:0, keyPerson:"no", plan:"no", onTime:"mostly", credit:"unknown", lifestyle:"current", bhxhYears:25},
+  massaff:{age:34, family:"kids", dependents:2, work:"salaried", income:30, spouse:15, other:0, stability:"stable", essential:22, lifestyle:10, budget:"partly",
+           liquid:80, monthlySave:6, auto:"no", debtPay:10, debtTotal:500, highInt:20, investable:600, pctCash:75, risk:"balanced", retireAge:60, concentration:0,
+           lifeCover:500, ciCover:0, health:"basic", will:"no", parents:0, keyPerson:"no", plan:"partly", onTime:"always", credit:"good", lifestyle:"current", bhxhYears:25},
+  aff:    {age:40, family:"kids", dependents:3, work:"salaried", income:80, spouse:35, other:10, stability:"stable", essential:45, lifestyle:30, budget:"yes",
+           liquid:400, monthlySave:25, auto:"no", debtPay:25, debtTotal:2500, highInt:0, investable:6000, pctCash:55, risk:"balanced", retireAge:58, concentration:45,
+           lifeCover:3000, ciCover:500, health:"basic", will:"no", parents:0, keyPerson:"no", plan:"partly", onTime:"always", credit:"good", lifestyle:"current", bhxhYears:0},
+  hnw:    {age:47, family:"kids", dependents:3, work:"owner", income:250, spouse:60, other:80, stability:"variable", essential:90, lifestyle:90, budget:"yes",
+           liquid:3000, monthlySave:100, auto:"yes", debtPay:60, debtTotal:8000, highInt:0, investable:60000, pctCash:40, risk:"growth", retireAge:60, concentration:60,
+           lifeCover:10000, ciCover:2000, health:"premium", will:"no", parents:0, keyPerson:"no", plan:"yes", onTime:"always", credit:"good", lifestyle:"current", bhxhYears:0},
+};
+const RET_PCT={mass:[60,80,100],massaff:[50,70,90],aff:[40,55,70],hnw:[30,40,50]};
+const LIFEI={minimal:0,current:1,higher:2};
+const EF_BASE={mass:3,massaff:4,aff:6,hnw:6};
+const NOM={dep:.055,bond:.07,gold:.05,eq:.10,re:.07}, INFL=.04;
+const MIX={conservative:{eq:.2,bond:.6,dep:.2},balanced:{eq:.5,bond:.4,dep:.1},growth:{eq:.8,bond:.15,dep:.05}};
+const mixNom=r=>{const x=MIX[r]||MIX.balanced; return x.eq*NOM.eq+x.bond*NOM.bond+x.dep*NOM.dep;};
+const realOf=n=>(1+n)/(1+INFL)-1;
+const EDU_PLANS=[opt("public","Công lập","Public"),opt("private","Tư thục","Private"),opt("intl","Quốc tế","International"),opt("abroad","Du học","Study abroad")];
+const EDU_COST={public:300,private:800,intl:2000,abroad:5000};
+const BS_DEF={
+  mass:{a_cash:15,a_invest:30,a_home:0,l_home_b:0,l_home_p:0,l_card_b:10,l_card_p:2},
+  massaff:{a_cash:80,a_invest:600,a_home:2500,l_home_b:480,l_home_p:8,l_card_b:20,l_card_p:2},
+  aff:{a_cash:400,a_bond:1200,a_equity:1800,a_gold:600,a_re:6000,a_reRent:15,a_biz:0,a_home:8000,a_other:1200,l_home_b:2500,l_home_p:25,l_car_b:0,l_car_p:0,l_pers_b:0,l_pers_p:0,l_card_b:0,l_card_p:0,l_biz_b:0,l_biz_p:0,l_margin_b:0,l_margin_p:0},
+  hnw:{a_cash:3000,a_bond:10000,a_equity:20000,a_gold:5000,a_re:30000,a_reRent:80,a_biz:40000,a_home:25000,a_other:5000,l_home_b:3000,l_home_p:40,l_car_b:0,l_car_p:0,l_pers_b:0,l_pers_p:0,l_card_b:0,l_card_p:0,l_biz_b:5000,l_biz_p:20,l_margin_b:0,l_margin_p:0},
+};
+const BS_KEYS=["a_cash","a_invest","a_bond","a_equity","a_gold","a_re","a_reRent","a_biz","a_home","a_other","l_home_b","l_home_p","l_car_b","l_car_p","l_pers_b","l_pers_p","l_card_b","l_card_p","l_biz_b","l_biz_p","l_margin_b","l_margin_p"];
+function deriveBS(o,raw){
+  const seg=o.segment, full=seg==="aff"||seg==="hnw", D=BS_DEF[seg]||BS_DEF.massaff;
+  const has=BS_KEYS.some(k=>raw[k]!=null&&raw[k]!=="");
+  const b=k=>(raw[k]==null||raw[k]==="")? n0(D[k]) : n0(raw[k]);
+  if(!has){ o.bs=null; return; }
+  const bs={cash:b("a_cash"), bond:full?b("a_bond"):0, equity:full?b("a_equity"):0, gold:full?b("a_gold"):0, invest:full?0:b("a_invest"),
+    re:full?b("a_re"):0, rent:full?b("a_reRent"):0, biz:full?b("a_biz"):0, home:b("a_home"), other:full?b("a_other"):0};
+  const L_=full?["home","car","pers","card","biz","margin"]:["home","card"];
+  bs.loans={}; L_.forEach(t=>bs.loans[t]={b:b("l_"+t+"_b"),p:b("l_"+t+"_p")});
+  bs.debt=L_.reduce((a,t)=>a+bs.loans[t].b,0); bs.pay=L_.reduce((a,t)=>a+bs.loans[t].p,0);
+  bs.mortgage=bs.loans.home.b;
+  o.liquid=bs.cash; o.investable=bs.bond+bs.equity+bs.gold+bs.invest;
+  o.debtTotal=bs.debt; o.debtPay=bs.pay; o.highInt=bs.loans.card.b+(full?bs.loans.pers.b:0);
+  if(full){ const base=bs.cash+o.investable+bs.re+bs.biz+bs.other; o.concentration=base>0?Math.round(Math.max(bs.biz,bs.re)/base*100):0; }
+  o.bs=bs;
+}
+function eff(c){ const d=DEFAULTS[c.segment]||DEFAULTS.massaff; const o=Object.assign({},c); const assumed=[];
+  Object.keys(d).forEach(k=>{ if(o[k]==null||o[k]===""){ o[k]=d[k]; assumed.push(k);} });
+  const kids=(c.kids||[]).filter(x=>x&&x.age!=null&&x.age!=="");
+  if(kids.length||(c.parents!=null&&c.parents!=="")){ o.dependents=kids.length+n0(c.parents); if(kids.length&&(c.family==null)) o.family="kids"; }
+  o.kidsE=kids.map(x=>({age:n0(x.age),cost:(x.cost!=null&&x.cost!=="")?n0(x.cost):EDU_COST[x.plan||"public"]}));
+  deriveBS(o,c);
+  o._assumed=assumed; return o; }
+
+/* ---------------- 60-second check-up (FinHealth) ---------------- */
+const qo=(v,vi,en,dvi,den)=>({v,vi,en,dvi,den});
+const QUICK = [
+  {k:"spend", p:"spend", vi:"Mỗi tháng, sau khi chi tiêu và trả nợ, gia đình còn lại bao nhiêu?", en:"Each month, after spending and loan payments, how much is left?",
+   opts:[qo("surplus","Dư nhiều","Plenty left","Trên 20% thu nhập","Over 20% of income"),qo("thin","Dư một ít","A little left","Dưới 20% thu nhập","Under 20%"),qo("even","Vừa đủ","Break even","Không dư đồng nào","Nothing left"),qo("short","Thiếu hụt","Short","Phải vay hoặc rút tiết kiệm","Borrow or dip into savings")]},
+  {k:"bills", p:"spend", vi:"Hoá đơn và các khoản trả góp có được thanh toán đúng hạn không?", en:"Are bills and instalments paid on time?",
+   opts:[qo("always","Luôn đúng hạn","Always","","",),qo("mostly","Thỉnh thoảng trễ","Sometimes late","","",),qo("late","Thường xuyên trễ","Often late","","")]},
+  {k:"liquid", p:"save", vi:"Nếu mất thu nhập từ ngày mai, tiền mặt và tiết kiệm đủ sống bao lâu?", en:"If income stopped tomorrow, how long would cash and savings last?",
+   opts:[qo("lt1","Dưới 1 tháng","Under 1 month","",""),qo("m1_3","1–3 tháng","1–3 months","",""),qo("m3_6","3–6 tháng","3–6 months","",""),qo("gt6","Trên 6 tháng","Over 6 months","","")]},
+  {k:"longterm", p:"invest", vi:"Tài sản đầu tư (không tính nhà đang ở) bằng khoảng bao nhiêu năm thu nhập?", en:"Investments (excluding your home) equal about how many years of income?",
+   opts:[qo("lt05","Dưới nửa năm","Under half a year","",""),qo("m05_2","Nửa năm – 2 năm","Half a year – 2 years","",""),qo("m2_5","2 – 5 năm","2 – 5 years","",""),qo("gt5","Trên 5 năm","Over 5 years","","")]},
+  {k:"debt", p:"borrow", vi:"Trả nợ mỗi tháng (nhà, xe, thẻ, trả góp) chiếm bao nhiêu thu nhập?", en:"Monthly loan repayments (home, car, cards, instalments) take how much of income?",
+   opts:[qo("none","Không có nợ","No debt","",""),qo("low","Dưới 20%","Under 20%","",""),qo("mid","20 – 40%","20 – 40%","",""),qo("high","Trên 40%","Over 40%","","")]},
+  {k:"credit", p:"borrow", vi:"Lịch sử tín dụng trên CIC của anh/chị thế nào?", en:"How is your credit history on CIC?",
+   opts:[qo("good","Tốt","Good","",""),qo("fair","Từng có nợ nhóm 2","Some watch-list debt","",""),qo("bad","Có nợ xấu","Bad debt","",""),qo("unknown","Chưa rõ","Not sure","","")]},
+  {k:"insure", p:"protect", vi:"Gia đình đang được bảo vệ bởi những loại bảo hiểm nào?", en:"How is the family protected today?",
+   opts:[qo("none","Chưa có gì ngoài BHYT","Only state insurance","",""),qo("basic","Sức khoẻ cơ bản","Basic health","",""),qo("life","Sức khoẻ + nhân thọ","Health + life","",""),qo("full","Toàn diện","Comprehensive","Sức khoẻ cao cấp + nhân thọ đủ mức","Premium health, full life cover")]},
+  {k:"plan", p:"plan", vi:"Anh/chị đã có kế hoạch tài chính cho 3–5 năm tới chưa?", en:"Do you have a financial plan for the next 3–5 years?",
+   opts:[qo("yes","Có, rõ ràng","Yes, clear","",""),qo("partly","Có ý tưởng","Rough idea","",""),qo("no","Chưa","Not yet","","")]},
+];
+const r1 = v=>Math.round(v*10)/10;
+function applyQuick(c){
+  const q=c.qc||{}; const d=DEFAULTS[c.segment]||DEFAULTS.massaff;
+  const g=k=> (c[k]==null||c[k]==="")? d[k] : c[k];
+  const I = n0(g("income"))+n0(g("spouse"))+n0(g("other"));
+  if(!I) return;
+  if(q.debt){ const r={none:0,low:.12,mid:.3,high:.5}[q.debt]; c.debtPay=r1(r*I); c.debtTotal=q.debt==="none"?0:Math.round(c.debtPay*60); if(q.debt==="none") c.highInt=0; }
+  if(q.spend){ const r={surplus:.7,thin:.88,even:1,short:1.1}[q.spend]; let out=r*I-n0(g("debtPay")); if(out<I*.3) out=I*.3; c.essential=r1(out*.7); c.lifestyle=r1(out*.3); c.monthlySave=r1(Math.max(0,I-out-n0(g("debtPay")))); }
+  if(q.liquid){ const mo={lt1:.5,m1_3:2,m3_6:4.5,gt6:8}[q.liquid]; c.liquid=Math.round(mo*(n0(g("essential"))+n0(g("debtPay")))); }
+  if(q.longterm){ const y={lt05:.25,m05_2:1.2,m2_5:3.5,gt5:7}[q.longterm]; c.investable=Math.round(y*I*12); }
+  if(q.insure){ const hasDeps=n0(g("dependents"))>0||["couple","kids","singleparent"].includes(g("family"));
+    const need=hasDeps? n0(g("income"))*120+n0(g("debtTotal")) : n0(g("debtTotal"));
+    ({none:()=>{c.health="none";c.lifeCover=0;c.ciCover=0;}, basic:()=>{c.health="basic";c.lifeCover=0;c.ciCover=0;},
+      life:()=>{c.health="basic";c.lifeCover=Math.round(need*.5);}, full:()=>{c.health="premium";c.lifeCover=Math.round(need);c.ciCover=Math.round(n0(g("income"))*36);}})[q.insure](); }
+  if(q.bills) c.onTime=q.bills;
+  if(q.credit) c.credit=q.credit;
+  if(q.plan) c.plan=q.plan;
+}
+/* score uplift if a need is fixed */
+function fixFor(n,c){ const ce=eff(c), m=analyse(c).m; const I=m.I;
+  return ({"borrow:1":x=>{x.highInt=0}, "borrow:1.5":x=>{x.onTime="always"}, "borrow:1.2":x=>{x.credit="fair"},
+    "spend:2":x=>{const out=.8*I-n0(ce.debtPay); x.essential=r1(out*.7); x.lifestyle=r1(out*.3);},
+    "save:3":x=>{x.liquid=Math.round(m.efTarget*(n0(ce.essential)+n0(ce.debtPay)))},
+    "borrow:6":x=>{x.debtPay=r1(.3*I)},
+    "protect:4":x=>{x.health=(c.segment==="aff"||c.segment==="hnw")?"premium":(ce.health==="none"?"basic":"premium")},
+    "protect:5":x=>{x.lifeCover=Math.round(m.lifeNeed)},
+  })[n.pillar+":"+n.order]; }
+function upliftOf(n,c,base){ const f=fixFor(n,c); if(!f) return 0; const x=JSON.parse(JSON.stringify(c)); f(x); return Math.max(0,analyse(x).overall-base); }
+function projectPlan(c,r){
+  const ups = r.needs.map(n=>({n,u:upliftOf(n,c,r.overall)})).filter(o=>o.u>0).sort((a,b)=>b.u-a.u).slice(0,3);
+  const x=JSON.parse(JSON.stringify(c)); ups.forEach(o=>fixFor(o.n,c)(x)); x.plan="yes";
+  return {ups, score:analyse(x).overall};
+}
+
+function viewQuickIntro(){
+  const c=S.c, d=DEFAULTS[c.segment]||{};
+  const deps=[0,1,2,3];
+  return `<main>
+  <div class="qhead"><div class="eyebrow">${L("Khám sức khoẻ tài chính · 60 giây","60-second financial check-up")}</div>
+   <h1>${L("Bắt đầu với <em>2 con số</em>","Start with <em>two numbers</em>")}</h1>
+   <p class="lede">${L("Tám câu hỏi nhanh tiếp theo sẽ cho ra chỉ số BMI tài chính, giống cách đo sức khoẻ.","Eight quick questions will produce a financial BMI, just like a health check.")}</p></div>
+  <div class="fields">
+   <div class="field"><label for="f-name">${L("Tên gọi khách hàng","Client name")}</label><div class="inwrap"><input id="f-name" data-k="name" type="text" autocomplete="off" placeholder="${L("VD: Anh Minh","e.g. Mr Minh")}" value="${esc(c.name||"")}"></div></div>
+   <div class="field"><label for="f-income">${L("Thu nhập ròng của khách hàng","Client's net income")}</label><div class="inwrap"><input id="f-income" data-k="income" type="number" inputmode="decimal" min="0" step="any" placeholder="${d.income}" value="${c.income==null?"":esc(c.income)}"><span class="unit">${L("tr ₫/tháng","VND m/mo")}</span></div></div>
+   <div class="field"><label for="f-spouse">${L("Thu nhập của vợ/chồng","Partner's income")}</label><div class="inwrap"><input id="f-spouse" data-k="spouse" type="number" inputmode="decimal" min="0" step="any" placeholder="${d.spouse}" value="${c.spouse==null?"":esc(c.spouse)}"><span class="unit">${L("tr ₫/tháng","VND m/mo")}</span></div></div>
+   <div class="field"><span class="flabel">${L("Số người phụ thuộc","Dependants")}</span><div class="choices">${deps.map(n=>{const on=c.dependents===n; const sug=c.dependents==null&&d.dependents===n; return `<button class="choice${sug?" sug":""}" data-a="deps" data-v="${n}" aria-pressed="${on}">${n===3?"3+":n}${sug?`<em>${L("giả định","assumed")}</em>`:""}</button>`;}).join("")}</div></div>
+  </div></main>`;
+}
+function viewQuick(){
+  const i=S.q, Q=QUICK[i], v=(S.c.qc||{})[Q.k];
+  return `<main>
+  <div class="qprog">${QUICK.map((_,j)=>`<i class="${j<i?"done":j===i?"on":""}"></i>`).join("")}</div>
+  <div class="qcount eyebrow">${L("Câu","Question")} ${i+1}/${QUICK.length} · ${pName(Q.p)==="plan"?L("Kế hoạch","Plan"):pName(Q.p)}</div>
+  <h1 class="qtitle">${esc(L(Q.vi,Q.en))}</h1>
+  <div class="qopts">${Q.opts.map(o=>`<button class="qopt" data-a="qans" data-v="${o.v}" aria-pressed="${v===o.v}"><b>${esc(L(o.vi,o.en))}</b>${(o.dvi||o.den)?`<span>${esc(L(o.dvi,o.den||o.dvi))}</span>`:""}<i></i></button>`).join("")}</div>
+  </main>`;
+}
+function viewReveal(){
+  const r=analyse(S.c), t=tierOf(r.overall), pj=projectPlan(S.c,r);
+  const worst=[...r.fh.ind].sort((a,b)=>a.v-b.v).slice(0,2);
+  return `<main class="reveal">
+  <div class="eyebrow" style="text-align:center">${L("BMI tài chính của","Financial BMI for")} ${esc(S.c.name||L("khách hàng","the client"))}</div>
+  <div class="rv"><span class="num countup" data-to="${r.overall}" style="color:${sevColor(t.k)}">${r.overall}</span><small>/100</small></div>
+  <div class="rvt" style="color:${sevColor(t.k)}">${L(t.vi,t.en)}</div>
+  <div class="bmi bare">${gaugeHTML(r.overall)}</div>
+  <div class="rvbox"><span class="eyebrow">${L("Điểm nghẽn lớn nhất","Biggest drags")}</span>
+   ${worst.map(x=>`<div class="rvrow"><span>${esc(L(x.vi,x.en))}</span><b class="num" style="color:${sevColor(x.v>=80?"ok":x.v>=50?"medium":x.v>=25?"high":"critical")}">${x.v}</b></div><small class="rvd">${esc(x.d)}</small>`).join("")}</div>
+  ${pj.score>r.overall?`<div class="rvup"><span class="eyebrow">${L("Tiềm năng sau 90 ngày","Potential in 90 days")}</span><div class="rvupv"><span class="num">${r.overall}</span><i>→</i><b class="num">${pj.score}</b></div><p>${L(`Nếu làm ${pj.ups.length} việc ưu tiên.`,`With ${pj.ups.length} priority moves.`)}</p></div>`:""}
+  </main>`;
+}
+function animateReveal(){
+  const el=document.querySelector(".countup"); if(!el) return; const to=+el.dataset.to;
+  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const mk=document.querySelector(".reveal .gtrack i"); if(mk){ const left=mk.style.left; mk.style.transition="none"; mk.style.left="2%"; requestAnimationFrame(()=>{ requestAnimationFrame(()=>{ mk.style.transition="left 1.1s cubic-bezier(.2,.8,.2,1)"; mk.style.left=left; }); }); }
+  const t0=performance.now(); const step=t=>{ const k=Math.min(1,(t-t0)/1100); el.textContent=Math.round(to*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(step); }; requestAnimationFrame(step);
+}
+
+/* ---------------- analysis engine ---------------- */
+const n0 = v => (v==null||v===""||isNaN(v))?0:Number(v);
+const fmtM = v => { v = Math.round(n0(v)); if (Math.abs(v)>=1000){ const b=v/1000; return (LANG==="vi"? b.toLocaleString("vi-VN",{maximumFractionDigits:1})+" tỷ" : "VND "+b.toLocaleString("en-US",{maximumFractionDigits:1})+"bn"); } return LANG==="vi"? v.toLocaleString("vi-VN")+" tr" : "VND "+v.toLocaleString("en-US")+"m"; };
+const pct = v => (isFinite(v)? Math.round(v*100):0)+"%";
+const AGE_MULT = [[25,0],[30,1],[35,2],[40,3],[45,4],[50,6],[55,7],[60,8],[67,10]];
+function ageMultiple(age){ if(age<=25) return 0; for(let i=1;i<AGE_MULT.length;i++){ const [a1,m1]=AGE_MULT[i-1],[a2,m2]=AGE_MULT[i]; if(age<=a2) return m1+(m2-m1)*(age-a1)/(a2-a1);} return 10; }
+const SEVW = {critical:50, high:30, medium:15};
+const REAL_R = {conservative:.02, balanced:.035, growth:.05};
+
+function analyse(c0){
+  const c = eff(c0);
+  const seg = SEGMENTS[c.segment] || SEGMENTS.massaff;
+  const upper = c.segment==="aff"||c.segment==="hnw";
+  const I = n0(c.income)+n0(c.spouse)+n0(c.other);
+  const exp = n0(c.essential)+n0(c.lifestyle);
+  const pay = n0(c.debtPay);
+  const save = c.monthlySave==null||c.monthlySave===""? Math.max(0,I-exp-pay) : n0(c.monthlySave);
+  const needs = [];
+  const add = (pillar,sev,order,o)=>needs.push(Object.assign({pillar,sev,order},o));
+  const m = {I, exp, pay, save};
+  if(!I){ return {needs:[], scores:{}, overall:0, m, empty:true}; }
+
+  // SPEND
+  m.spendRatio = exp/I;
+  if(m.spendRatio>0.9) add("spend","critical",2,{t:L("Chi tiêu gần bằng hoặc vượt thu nhập","Spending close to or above income"),
+     f:L(`Chi tiêu chiếm ${pct(m.spendRatio)} thu nhập ròng.`,`Spending takes ${pct(m.spendRatio)} of net income.`),
+     a:L("Rà soát ngân sách theo 50/30/20, cắt giảm chi phong cách sống, tự động chuyển tiết kiệm ngay ngày nhận lương.","Rebuild the budget on 50/30/20, trim lifestyle costs and move savings automatically on payday."),
+     s:[L("Ngân sách 50/30/20","50/30/20 budget"),L("Tài khoản tách mục tiêu","Goal-based sub-accounts"),L("Tiết kiệm tự động","Auto-save")]});
+  else if(m.spendRatio>0.7 || (c.budget==="no"&&m.spendRatio>0.6)) add("spend","medium",2,{t:L("Cần tối ưu cơ cấu chi tiêu","Spending mix needs tightening"),
+     f:L(`Chi tiêu ${pct(m.spendRatio)} thu nhập; chuẩn tham chiếu ≤ 70–80%.`,`Spending is ${pct(m.spendRatio)} of income; benchmark ≤ 70–80%.`),
+     a:L("Theo dõi chi tiêu 3 tháng, đặt trần cho chi phong cách sống và ưu tiên 'trả cho mình trước'.","Track spending for 3 months, cap lifestyle costs and pay yourself first."),
+     s:[L("Ngân sách 50/30/20","50/30/20 budget"),L("Tiết kiệm tự động","Auto-save")]});
+
+  // SAVE
+  m.saveRate = save/I;
+  const efBase = n0(c.essential)+pay;
+  m.efMonths = efBase? n0(c.liquid)/efBase : 99;
+  m.efTarget = (EF_BASE[c.segment]||4) + ((c.stability==="variable"||c.work==="self"||c.work==="owner"||(n0(c.dependents)>0&&!n0(c.spouse)))?3:0);
+  if(c.bs){ const idle=Math.max(0,c.bs.cash-m.efTarget*efBase); c.investable=n0(c.investable)+idle; c.pctCash=Math.round((idle+c.bs.gold)/Math.max(1,c.investable)*100); m.idle=idle; }
+  const efSolutions = upper? [L("Quỹ thị trường tiền tệ","Money market fund"),L("Trái phiếu ngắn hạn","Short-duration bonds")] : [L("Tiết kiệm linh hoạt","Flexible savings"),L("Quỹ thị trường tiền tệ","Money market fund")];
+  if(m.efMonths<1) add("save","critical",3,{t:L("Chưa có quỹ dự phòng","No emergency buffer"),
+     f:L(`Tiền rút được ngay chỉ đủ ${m.efMonths.toFixed(1)} tháng chi phí; mục tiêu ${m.efTarget} tháng (${fmtM(efBase*m.efTarget)}).`,`Liquid cash covers only ${m.efMonths.toFixed(1)} months; target ${m.efTarget} months (${fmtM(efBase*m.efTarget)}).`),
+     a:L("Ưu tiên xây quỹ dự phòng trước khi đầu tư rủi ro; góp đều mỗi tháng tới khi đủ mục tiêu.","Build the buffer before any risk investing; contribute monthly until it reaches target."), s:efSolutions});
+  else if(m.efMonths<m.efTarget) add("save","high",3,{t:L("Quỹ dự phòng chưa đủ","Emergency fund below target"),
+     f:L(`Đủ ${m.efMonths.toFixed(1)}/${m.efTarget} tháng. Thiếu ${fmtM(efBase*m.efTarget-n0(c.liquid))}.`,`Covers ${m.efMonths.toFixed(1)} of ${m.efTarget} months. Gap ${fmtM(efBase*m.efTarget-n0(c.liquid))}.`),
+     a:L("Bổ sung phần thiếu trong 6–12 tháng, giữ ở kênh thanh khoản cao, không dùng cho đầu tư.","Close the gap over 6–12 months in a highly liquid account kept apart from investments."), s:efSolutions});
+  if(m.saveRate<seg.saveT) add("save", m.saveRate<seg.saveT/2?"high":"medium",7,{t:L("Tỷ lệ tiết kiệm thấp hơn chuẩn phân khúc","Savings rate below segment benchmark"),
+     f:L(`Đang tiết kiệm ${pct(m.saveRate)} thu nhập; chuẩn cho phân khúc ${L(seg.vi,seg.en)} là ≥ ${pct(seg.saveT)}.`,`Saving ${pct(m.saveRate)} of income; benchmark for ${L(seg.vi,seg.en)} is ≥ ${pct(seg.saveT)}.`),
+     a:L(`Nâng dần lên ${fmtM(I*seg.saveT)}/tháng; tăng 1–2 điểm % mỗi lần tăng lương.`,`Step up to ${fmtM(I*seg.saveT)}/month; add 1–2 points with every pay rise.`),
+     s:[L("Tiết kiệm tự động","Auto-save"),L("Đầu tư định kỳ (SIP)","Regular investment plan")]});
+
+  // BORROW
+  m.dsr = pay/I;
+  if(n0(c.highInt)>0) add("borrow", n0(c.highInt)>I*2?"critical":"high",1,{t:L("Nợ lãi cao cần xử lý trước","Clear high-interest debt first"),
+     f:L(`Dư nợ lãi cao ${fmtM(c.highInt)} (thẻ tín dụng / vay tiêu dùng thường 25–45%/năm).`,`High-interest balance of ${fmtM(c.highInt)} (cards and consumer loans often cost 25–45% a year).`),
+     a:L("Trả nợ lãi cao nhất trước (avalanche) hoặc hợp nhất sang khoản vay lãi thấp hơn; không mở thêm hạn mức mới.","Pay the highest rate first (avalanche) or consolidate into a cheaper loan; open no new credit lines."),
+     s:[L("Hợp nhất nợ","Debt consolidation"),L("Phương pháp avalanche","Avalanche method")]});
+  if(c.onTime==="late"||c.onTime==="mostly") add("borrow", c.onTime==="late"?"high":"medium",1.5,{t:L("Thanh toán chưa đúng hạn","Late payments"),
+     f:L("Trễ hạn làm phát sinh phí phạt và ảnh hưởng điểm tín dụng CIC.","Late payments add fees and hurt the CIC credit score."),
+     a:L("Cài thanh toán tự động cho mọi hoá đơn và khoản vay; đặt ngày trả nợ ngay sau ngày nhận lương.","Automate every bill and loan payment; align due dates with payday."),
+     s:[L("Thanh toán tự động","Auto-pay")]});
+  if(c.credit==="bad") add("borrow","critical",1.2,{t:L("Có nợ xấu trên CIC","Bad debt on CIC"),
+     f:L("Nợ xấu khiến gần như không thể vay mới với lãi hợp lý trong nhiều năm.","Bad debt blocks affordable new credit for years."),
+     a:L("Tất toán khoản nợ xấu trước tiên, xin xác nhận hoàn tất và theo dõi CIC cập nhật.","Settle the bad debt first, get a clearance letter and track the CIC update."),
+     s:[L("Tái cơ cấu nợ","Debt restructuring")]});
+  if(m.dsr>0.4) add("borrow","critical",6,{t:L("Áp lực trả nợ vượt ngưỡng an toàn","Debt service above safe limit"),
+     f:L(`Trả nợ chiếm ${pct(m.dsr)} thu nhập (DSR); ngưỡng an toàn ≤ 35%.`,`Repayments take ${pct(m.dsr)} of income (DSR); safe limit ≤ 35%.`),
+     a:L("Tái cơ cấu kỳ hạn để giảm trả góp tháng, dừng vay mới cho tiêu dùng.","Extend or restructure terms to cut monthly payments; stop new consumer borrowing."),
+     s:[L("Tái cơ cấu khoản vay","Loan restructuring"),L("Hợp nhất nợ","Debt consolidation")]});
+  else if(m.dsr>0.3) add("borrow","medium",6,{t:L("DSR ở vùng cần theo dõi","Debt service needs watching"),
+     f:L(`DSR ${pct(m.dsr)}; chuẩn ≤ 30–35%.`,`DSR ${pct(m.dsr)}; benchmark ≤ 30–35%.`),
+     a:L("Tránh khoản vay mới cho tới khi DSR dưới 30%; ưu tiên trả trước khoản lãi cao.","Avoid new loans until DSR is under 30%; prepay the costliest loan."), s:[L("Trả nợ trước hạn có chọn lọc","Selective prepayment")]});
+
+  // PROTECT
+  const annualInc = n0(c.income)*12;
+  const hasDeps = n0(c.dependents)>0 || c.family==="couple"||c.family==="kids"||c.family==="singleparent";
+  { const ages=(c.kidsE||[]).map(k=>k.age); const yrs = ages.length? Math.max(0,22-Math.min(...ages)) : (n0(c.dependents)>0?10:(c.family==="couple"?5:0));
+    const repl=Math.max(0,exp-n0(c.spouse))*12*yrs; m.eduTotal=(c.kidsE||[]).filter(k=>k.age<22).reduce((a,k)=>a+k.cost,0);
+    m.lifeNeed = hasDeps? Math.max(0, repl+n0(c.debtTotal)+m.eduTotal-n0(c.liquid)-n0(c.investable)) : n0(c.debtTotal); m.lifeYears=yrs; }
+  m.lifeGap = Math.max(0, m.lifeNeed-n0(c.lifeCover));
+  m.ciNeed = annualInc*3; m.ciGap = Math.max(0,m.ciNeed-n0(c.ciCover));
+  if(c.health==="none") add("protect", upper?"high":"critical",4,{t:L("Chưa có bảo hiểm sức khoẻ bổ sung","No private health cover"),
+     f:L("Chi phí y tế lớn có thể làm cạn quỹ dự phòng và kế hoạch đầu tư.","A major medical bill can wipe out savings and derail the plan."),
+     a:L("Bổ sung bảo hiểm sức khoẻ cho cả gia đình, ưu tiên nội trú và bệnh hiểm nghèo.","Add family health cover, prioritising inpatient and serious illness."),
+     s:upper?[L("Sức khoẻ cao cấp / quốc tế","Premium / international health")]:[L("Sức khoẻ cơ bản","Basic health plan"),L("Bảo hiểm vi mô","Micro-insurance")]});
+  else if(c.health==="basic" && upper) add("protect","medium",4,{t:L("Nâng cấp bảo hiểm sức khoẻ","Upgrade health cover"),
+     f:L("Gói cơ bản chưa tương xứng với mức sống và kỳ vọng điều trị của phân khúc.","A basic plan falls short of this segment's lifestyle and treatment expectations."),
+     a:L("Cân nhắc gói toàn diện, phạm vi quốc tế, hạn mức cao.","Consider a comprehensive plan with international cover and higher limits."), s:[L("Sức khoẻ quốc tế","International health")]});
+  if(m.lifeGap>0 && hasDeps) add("protect", n0(c.lifeCover)===0?"critical":(m.lifeGap>m.lifeNeed*.5?"high":"medium"),5,{t:L("Thiếu hụt bảo vệ thu nhập (nhân thọ)","Life cover gap"),
+     f:L(`Nhu cầu ≈ ${fmtM(m.lifeNeed)} (10× thu nhập năm + dư nợ); hiện có ${fmtM(c.lifeCover)}. Thiếu ${fmtM(m.lifeGap)}.`,`Need ≈ ${fmtM(m.lifeNeed)} (10× annual income + debts); in place ${fmtM(c.lifeCover)}. Gap ${fmtM(m.lifeGap)}.`),
+     a:L("Bổ sung mệnh giá bảo vệ để thay thế thu nhập và trả hết nợ nếu rủi ro xảy ra.","Add cover so income is replaced and debts are cleared if the worst happens."),
+     s:upper?[L("Tử kỳ + liên kết chung","Term + universal life"),L("Cấu trúc thừa kế","Estate-linked cover")]:[L("Bảo hiểm tử kỳ","Term life"),L("Rider thu nhập","Income benefit rider")]});
+  if(m.ciGap>0 && annualInc>0 && c.work!=="retired") add("protect", n0(c.ciCover)===0?"high":"medium",5.5,{t:L("Thiếu bảo vệ bệnh hiểm nghèo","Critical illness gap"),
+     f:L(`Chuẩn ≈ 3× thu nhập năm (${fmtM(m.ciNeed)}); hiện có ${fmtM(c.ciCover)}.`,`Benchmark ≈ 3× annual income (${fmtM(m.ciNeed)}); in place ${fmtM(c.ciCover)}.`),
+     a:L("Bổ sung quyền lợi bệnh hiểm nghèo để bù thu nhập trong thời gian điều trị.","Add critical illness cover to replace income during treatment."), s:[L("Rider bệnh hiểm nghèo","Critical illness rider")]});
+  if(c.will==="no" && (upper || n0(c.dependents)>0)) add("protect", c.segment==="hnw"?"high":"medium",9,{t:L("Chưa có kế hoạch thừa kế","No estate plan"),
+     f:L("Chưa có di chúc hoặc uỷ quyền; rủi ro tranh chấp và chậm trễ chuyển giao tài sản.","No will or power of attorney; risk of disputes and delays in passing on assets."),
+     a:L("Lập di chúc, chỉ định người thụ hưởng, cân nhắc cấu trúc thừa kế với luật sư.","Draft a will, name beneficiaries and review succession structures with a lawyer."),
+     s:c.segment==="hnw"?[L("Di chúc & uỷ quyền","Will & power of attorney"),L("Uỷ thác / quỹ gia đình","Trust / family office")]:[L("Di chúc","Will"),L("Chỉ định người thụ hưởng","Beneficiary nomination")]});
+  if(c.work==="owner" && upper && c.keyPerson==="no") add("protect","high",8.5,{t:L("Rủi ro doanh nghiệp chưa được tách bạch","Business risk not ring-fenced"),
+     f:L("Tài sản gia đình phụ thuộc vào doanh nghiệp nhưng chưa có bảo hiểm người chủ chốt hay kế hoạch kế nhiệm.","Family wealth depends on the business, with no key-person cover or succession plan."),
+     a:L("Bảo hiểm người chủ chốt, thoả thuận mua bán cổ phần, tách tài sản cá nhân – doanh nghiệp.","Key-person cover, buy-sell agreement and separation of personal and business assets."),
+     s:[L("Bảo hiểm người chủ chốt","Key-person insurance"),L("Kế hoạch kế nhiệm","Succession plan")]});
+
+  // INVEST
+  m.multiple = n0(c.investable)/(I*12);
+  m.multBench = ageMultiple(n0(c.age));
+  const years = n0(c.retireAge)-n0(c.age);
+  const rNew = realOf(mixNom(c.risk));
+  const bs=c.bs; const nowNom = bs? ((bs.bond*NOM.bond+bs.equity*NOM.eq+bs.gold*NOM.gold+(m.idle||0)*NOM.dep+bs.invest*mixNom(c.risk))/Math.max(1,n0(c.investable))) : (n0(c.pctCash)/100*(NOM.dep+NOM.gold)/2+(1-n0(c.pctCash)/100)*mixNom(c.risk));
+  const rNow = realOf(nowNom);
+  m.retireYears = years;
+  if(years>0 && c.work!=="retired"){
+    const tier=RET_PCT[c.segment]||RET_PCT.massaff; m.retPct=tier[LIFEI[c.lifestyle]??1]/100;
+    const by=n0(c.bhxhYears); m.pension=(c.segment==="mass"||c.segment==="massaff")&&by>=15? Math.min(.75,.45+.02*Math.max(0,by-20))*Math.min(46.8,.6*n0(c.income)) : 0;
+    m.rentInc = bs? bs.rent : 0;
+    m.retSpend=exp*m.retPct; const gapM=Math.max(0,m.retSpend-m.pension-m.rentInc); m.corpus=gapM*12/0.04;
+    const fvA = n0(c.investable)*Math.pow(1+rNow,years);
+    const fvC = rNew>0? save*12*((Math.pow(1+rNew,years)-1)/rNew) : save*12*years;
+    m.projected = fvA+fvC; m.retGap = Math.max(0,m.corpus-m.projected);
+    m.reqMonthly = m.retGap>0? m.retGap*rNew/(Math.pow(1+rNew,years)-1)/12 : 0;
+    if(m.retGap>0){ const ratio=m.projected/Math.max(1,m.corpus);
+      add("invest", ratio<.4?"high":"medium",7,{t:"",f:"",a:"",s:[]}); }
+  }
+  if((c.kidsE||[]).some(k=>k.age<18)){ const kids=c.kidsE.filter(k=>k.age<18); m.eduMonthly=kids.reduce((a,k)=>{const n=Math.max(1,18-k.age); const rr=realOf(n<5?NOM.bond:mixNom(c.risk)); return a+k.cost*rr/(Math.pow(1+rr,n)-1)/12;},0); m.eduMinYears=Math.min(...kids.map(k=>Math.max(1,18-k.age))); m.eduKids=kids.length; m.eduCost=kids.reduce((a,k)=>a+k.cost,0);
+    if(!(n0(c.investable)>=m.eduCost*1.5 && !m.retGap)) add("invest", m.eduMinYears<=5?"high":"medium",7.2,{t:"",f:"",a:"",s:[]}); }
+  if(n0(c.pctCash)>60 && years>5 && n0(c.investable)>0) add("invest","medium",8,{t:L("Tài sản tập trung vào tiền gửi & vàng","Too much in deposits and gold"),
+     f:L(`${c.pctCash}% tài sản đầu tư ở tiền gửi/vàng, trong khi còn ${years} năm tới hưu trí; lợi suất thực thấp.`,`${c.pctCash}% sits in deposits or gold with ${years} years to retirement; low real returns.`),
+     a:L(`Chuyển dần sang danh mục đa tài sản theo khẩu vị ${riskName(c.risk)}; giải ngân từng phần (DCA) 6–12 tháng.`,`Shift gradually into a multi-asset mix matched to a ${riskName(c.risk)} profile; phase in over 6–12 months (DCA).`),
+     s:[L("Quỹ cân bằng","Balanced fund"),L("Quỹ trái phiếu","Bond fund"),L("DCA","Dollar-cost averaging")]});
+  if(upper && n0(c.concentration)>=40) add("invest", n0(c.concentration)>=60?"high":"medium",8.2,{t:L("Rủi ro tập trung tài sản","Concentration risk"),
+     f:L(`Một tài sản chiếm ${c.concentration}% tổng tài sản; chuẩn quản trị rủi ro ≤ 20–25%.`,`One holding is ${c.concentration}% of wealth; risk guideline ≤ 20–25%.`),
+     a:L("Giảm tập trung theo lộ trình, cân nhắc vay cầm cố danh mục thay vì bán, phòng hộ khi phù hợp.","Reduce concentration on a schedule; consider portfolio-backed lending instead of selling, and hedging where suitable."),
+     s:[L("Đa dạng hoá theo lộ trình","Staged diversification"),L("Vay cầm cố danh mục","Portfolio-backed lending")]});
+  if(m.multiple < m.multBench*.6 && n0(c.age)>=30 && !needs.some(x=>x.order===7&&x.pillar==="invest")) add("invest","medium",7.5,{t:L("Tài sản đầu tư thấp so với độ tuổi","Investable assets low for age"),
+     f:L(`Đang có ${m.multiple.toFixed(1)}× thu nhập năm; chuẩn tham chiếu ở tuổi ${c.age} ≈ ${m.multBench.toFixed(1)}×.`,`Holds ${m.multiple.toFixed(1)}× annual income; benchmark at age ${c.age} ≈ ${m.multBench.toFixed(1)}×.`),
+     a:L("Thiết lập kế hoạch đầu tư định kỳ gắn với từng mục tiêu.","Set up regular investing linked to each goal."), s:[L("Đầu tư định kỳ (SIP)","Regular investment plan")]});
+
+  // EARN
+  if(n0(c.dependents)>0 && !n0(c.spouse) && !n0(c.other)) add("earn","medium",10,{t:L("Phụ thuộc vào một nguồn thu nhập","Single income supports the family"),
+     f:L(`Một nguồn thu nhập nuôi ${c.dependents} người phụ thuộc.`,`One income supports ${c.dependents} dependant(s).`),
+     a:L("Bảo vệ thu nhập bằng bảo hiểm, xây nguồn thu thụ động (cho thuê, cổ tức) theo thời gian.","Insure the income and build passive income (rent, dividends) over time."), s:[L("Rider thu nhập","Income benefit rider"),L("Danh mục cổ tức","Dividend portfolio")]});
+  if(c.stability==="variable") add("earn","medium",10.5,{t:L("Thu nhập biến động","Variable income"),
+     f:L("Thu nhập thay đổi theo tháng làm tăng rủi ro dòng tiền.","Month-to-month swings raise cash-flow risk."),
+     a:L("Chi tiêu theo 'mức lương nền' thấp nhất, phần vượt đưa vào quỹ dự phòng và đầu tư.","Budget off a baseline 'salary' and sweep the surplus into savings and investments."), s:[L("Lương nền tự trả","Self-paid baseline salary")]});
+  if(upper && !n0(c.other)) add("earn","medium",10.8,{t:L("Chưa có thu nhập thụ động","No passive income yet"),
+     f:L("Toàn bộ thu nhập đến từ công việc chủ động.","All income comes from active work."),
+     a:L("Xây danh mục tạo dòng tiền (cổ tức, trái phiếu, cho thuê) hướng tới độc lập tài chính.","Build income-producing assets (dividends, bonds, rentals) towards financial independence."), s:[L("Danh mục thu nhập","Income portfolio")]});
+
+  // scores
+  const scores = {}; PILLARS.forEach(p=>{ let s=100; needs.filter(x=>x.pillar===p.k).forEach(x=>s-=SEVW[x.sev]||0); scores[p.k]=Math.max(5,s); });
+  const fh = finHealth(c,m);
+  const overall = fh.score;
+  const sevRank = {critical:0,high:1,medium:2};
+  needs.sort((a,b)=> (sevRank[a.sev]-sevRank[b.sev]) || (a.order-b.order));
+  needs.forEach(n=>shortCopy(n,c,m,seg));
+  needs.forEach(n=>n.products=productsFor(n,c,needs,m));
+  return {needs, scores, overall, fh, m, assumed:c._assumed||[], ce:c};
+}
+
+/* FinHealth Score – 8 indicators (Financial Health Network framework: Spend, Save, Borrow, Plan) */
+function band(v,cuts){ for(const [t,sc] of cuts){ if(v>=t) return sc; } return 0; }
+function finHealth(c,m){
+  const I=m.I, out=(m.exp+m.pay)/I;
+  const hasDeps = n0(c.dependents)>0 || ["couple","kids","singleparent"].includes(c.family);
+  const lifeRatio = hasDeps? Math.min(1,n0(c.lifeCover)/Math.max(1,m.lifeNeed)) : 1;
+  const hp = c.health==="premium"?100:c.health==="basic"?60:0;
+  const nw = c.bs? (c.bs.cash+c.bs.bond+c.bs.equity+c.bs.gold+c.bs.invest+c.bs.re+c.bs.biz+c.bs.other-(c.bs.debt-c.bs.mortgage)) : n0(c.liquid)+n0(c.investable)-n0(c.highInt);
+  const expected = n0(c.age)*I*12/10;
+  const wi = expected>0? nw/expected : 0;
+  const freedom = m.exp>0? (n0(c.other)+n0(c.investable)*.04/12)/m.exp : 0;
+  const multRatio = m.multBench>0? m.multiple/m.multBench : (m.saveRate>=.1?1:.5);
+  const ind = [
+    {k:"spend", p:"spend", vi:"Chi tiêu thấp hơn thu nhập", en:"Spends less than income", v:band(-out,[[-.8,100],[-.9,75],[-1,50],[-1.1,25]]), d:pct(out)+L(" thu nhập đã chi"," of income spent")},
+    {k:"bills", p:"spend", vi:"Thanh toán đúng hạn", en:"Pays bills on time", v:c.onTime==="always"?100:c.onTime==="mostly"?60:10, d:c.onTime==="always"?L("Luôn đúng hạn","Always"):c.onTime==="mostly"?L("Thỉnh thoảng trễ","Sometimes late"):L("Thường trễ","Often late")},
+    {k:"liquid", p:"save", vi:"Đủ tiền dự phòng", en:"Enough liquid savings", v:band(m.efMonths,[[6,100],[3,75],[1,50],[.5,25]]), d:(m.efMonths>=99?"–":m.efMonths.toFixed(1))+L(" tháng chi phí"," months of costs")},
+    {k:"longterm", p:"invest", vi:"Tích luỹ dài hạn đủ", en:"Enough long-term savings", v:band(multRatio,[[1,100],[.75,75],[.5,50],[.25,25]]), d:m.multiple.toFixed(1)+"× / "+m.multBench.toFixed(1)+"× "+L("chuẩn tuổi","age benchmark")},
+    {k:"debt", p:"borrow", vi:"Nợ trong tầm kiểm soát", en:"Manageable debt", v:Math.min(n0(c.highInt)>0?50:100, band(-m.dsr,[[-.2,100],[-.35,75],[-.45,50],[-.6,25]])), d:"DSR "+pct(m.dsr)},
+    {k:"credit", p:"borrow", vi:"Lịch sử tín dụng tốt", en:"Good credit history", v:{good:100,fair:50,bad:10,unknown:50}[c.credit]||50, d:{good:L("Tốt","Good"),fair:L("Nợ nhóm 2","Watch-list"),bad:L("Nợ xấu","Bad debt"),unknown:L("Chưa rõ","Unknown")}[c.credit]||"–"},
+    {k:"insure", p:"protect", vi:"Bảo hiểm phù hợp", en:"Appropriate insurance", v:Math.round((hp+lifeRatio*100)/2), d:L("Nhân thọ ","Life ")+pct(lifeRatio)+L(" nhu cầu"," of need")},
+    {k:"plan", p:"plan", vi:"Có kế hoạch tài chính", en:"Plans ahead", v:c.plan==="yes"?100:c.plan==="partly"?55:15, d:c.plan==="yes"?L("Có kế hoạch rõ","Clear plan"):c.plan==="partly"?L("Có ý tưởng","Rough idea"):L("Chưa có","None yet")},
+  ];
+  const score = Math.round(ind.reduce((a,x)=>a+x.v,0)/ind.length);
+  return {score, ind, nw, expected, wi, freedom};
+}
+function wealthBand(w){ return w>=2?{k:"ok",vi:"Tích luỹ xuất sắc",en:"Prodigious accumulator"}:w>=1?{k:"ok",vi:"Đúng nhịp",en:"On pace"}:w>=.5?{k:"medium",vi:"Dưới chuẩn",en:"Below pace"}:{k:"critical",vi:"Tích luỹ thấp",en:"Under-accumulator"}; }
+function freedomBand(f){ return f>=1?{k:"ok",vi:"Độc lập tài chính",en:"Financially independent"}:f>=.5?{k:"ok",vi:"Bán độc lập",en:"Semi-independent"}:f>=.2?{k:"medium",vi:"Đang xây nền",en:"Building"}:{k:"critical",vi:"Phụ thuộc thu nhập chủ động",en:"Depends on active income"}; }
+function gaugeHTML(v){ const t=tierOf(v); return `<div class="gauge"><div class="gtrack"><span style="flex:40" class="z1"></span><span style="flex:40" class="z2"></span><span style="flex:20" class="z3"></span><i style="left:${Math.min(98,Math.max(2,v))}%"></i></div>
+  <div class="glab"><span>0</span><span style="left:40%">40</span><span style="left:80%">80</span><span style="right:0">100</span></div>
+  <div class="gzones"><span>${L("Dễ tổn thương","Vulnerable")}</span><span>${L("Đang xoay xở","Coping")}</span><span>${L("Khoẻ mạnh","Healthy")}</span></div></div>`; }
+function liveHTML(){
+  if(!S.c||!S.c.segment) return "";
+  const r=analyse(S.c); if(r.empty) return ""; const t=tierOf(r.overall);
+  return `<span class="lscore" style="color:${sevColor(t.k)}">${r.overall}</span><span class="ltxt"><b>${L("BMI tài chính","Financial BMI")}</b>${L(t.vi,t.en)}</span>`;
+}
+function insightHTML(st){
+  if(!st.pillar) return "";
+  const r=analyse(S.c); if(r.empty) return ""; const m=r.m, ce=r.ce, fh=r.fh;
+  const I = {
+    earn:[L("Thu nhập hộ gia đình","Household income"), fmtM(m.I)+L("/tháng","/mo"), L(`Thu nhập thụ động đang phủ ${pct(fh.freedom)} chi tiêu.`,`Passive income covers ${pct(fh.freedom)} of spending.`), L("“Nếu thu nhập chính tạm dừng 6 tháng, gia đình mình dựa vào nguồn nào?”","“If the main income paused for six months, what would the family rely on?”"), fh.freedom>=.5],
+    spend:[L("Tỷ lệ chi ra / thu vào","Outflow / income"), pct((m.exp+m.pay)/m.I), L("Chuẩn khoẻ mạnh ≤ 80% (gồm trả nợ).","Healthy is ≤ 80% including debt payments."), L("“Khoản chi nào anh/chị thấy đáng giá nhất, khoản nào có thể cắt mà không tiếc?”","“Which spending feels most worth it, and what could go without regret?”"), (m.exp+m.pay)/m.I<=.8],
+    save:[L("Quỹ dự phòng","Emergency fund"), (m.efMonths>=99?"–":m.efMonths.toFixed(1))+L(" tháng"," months"), L(`Mục tiêu ${m.efTarget} tháng chi phí thiết yếu + trả nợ.`,`Target ${m.efTarget} months of essentials plus debt payments.`), L("“Lần gần nhất có khoản chi bất ngờ, anh/chị đã xoay xở thế nào?”","“Last time an unexpected bill came up, how did you handle it?”"), m.efMonths>=m.efTarget],
+    borrow:[L("Tỷ lệ trả nợ (DSR)","Debt service (DSR)"), pct(m.dsr), L("Chuẩn ≤ 35%; nợ lãi cao cần xử lý trước.","Keep ≤ 35%; clear high-interest debt first."), L("“Khoản vay nào đang làm anh/chị bận tâm nhất?”","“Which loan worries you the most?”"), m.dsr<=.35 && !n0(ce.highInt)],
+    invest:[L("Chỉ số tích luỹ tài sản","Wealth accumulation index"), fh.wi.toFixed(2)+"×", L(`${L(wealthBand(fh.wi).vi,wealthBand(fh.wi).en)} · chuẩn = tuổi × thu nhập năm ÷ 10.`,`${wealthBand(fh.wi).en} · benchmark = age × annual income ÷ 10.`), L("“Anh/chị hình dung cuộc sống lúc nghỉ hưu ra sao, cần khoảng bao nhiêu mỗi tháng?”","“What does retirement look like for you, and what would it cost each month?”"), fh.wi>=1],
+    protect:[L("Mức bảo vệ nhân thọ","Life cover vs need"), pct(Math.min(9.99,n0(ce.lifeCover)/Math.max(1,m.lifeNeed))), L(`Nhu cầu ≈ ${fmtM(m.lifeNeed)} (10× thu nhập năm + dư nợ).`,`Need ≈ ${fmtM(m.lifeNeed)} (10× annual income + debts).`), L("“Nếu chuyện không may xảy ra, anh/chị muốn các con vẫn giữ được điều gì?”","“If the worst happened, what would you want the children to keep?”"), m.lifeGap<=0],
+  }[st.pillar];
+  if(!I) return "";
+  return `<div class="insight ${I[4]?"good":"warn"}"><div class="ih"><span class="eyebrow">${L("Nhận định nhanh","Quick read")}</span><span class="sev ${I[4]?"ok":"medium"}">${I[4]?L("Đạt chuẩn","On track"):L("Cần trao đổi","Discuss")}</span></div>
+    <div class="im"><span>${I[0]}</span><b class="num">${I[1]}</b></div><p>${I[2]}</p><div class="talk">${I.chat||""}<i>${L("Câu hỏi đào sâu","Follow-up question")}</i> ${I[3]}</div></div>`;
+}
+function updateLive(){ const a=document.getElementById("live"); if(a) a.innerHTML=liveHTML(); const bb=document.getElementById("bsbox"); if(bb) bb.innerHTML=bsHTML(); const b=document.getElementById("insight"); if(b&&S.view==="wizard") b.innerHTML=insightHTML(STEPS[S.step]); }
+
+/* short, client-facing copy: title · metric · one action */
+function shortCopy(n,c,m,seg){
+  const k=n.pillar+":"+n.order, T=(vi,en)=>L(vi,en);
+  const C={
+   "spend:2": n.sev==="critical"? [T("Chi gần hết thu nhập","Spending eats the income"), `${pct(m.spendRatio)} ${T("thu nhập","of income")} · ${T("chuẩn","target")} ≤ 70%`, T("Cắt chi phụ, để dành ngay ngày lương.","Trim extras, save on payday.")]
+                                  : [T("Chi tiêu hơi cao","Spending runs high"), `${pct(m.spendRatio)} ${T("thu nhập","of income")} · ${T("chuẩn","target")} ≤ 70%`, T("Đặt trần chi phụ, trả cho mình trước.","Cap extras, pay yourself first.")],
+   "save:3": [n.sev==="critical"?T("Chưa có quỹ dự phòng","No safety net"):T("Quỹ dự phòng còn mỏng","Thin safety net"), `${m.efMonths>=99?"–":m.efMonths.toFixed(1)} / ${m.efTarget} ${T("tháng","months")}`, T(`Gom thêm ${fmtM(Math.max(0,(n0(c.essential)+n0(c.debtPay))*m.efTarget-n0(c.liquid)))} trong 6–12 tháng.`,`Add ${fmtM(Math.max(0,(n0(c.essential)+n0(c.debtPay))*m.efTarget-n0(c.liquid)))} over 6–12 months.`)],
+   "save:7": [T("Để dành chưa đủ","Saving too little"), `${pct(m.saveRate)} / ${T("chuẩn","target")} ${pct(seg.saveT)}`, T(`Nâng lên ${fmtM(m.I*seg.saveT)}/tháng.`,`Raise to ${fmtM(m.I*seg.saveT)}/month.`)],
+   "borrow:1": [T("Nợ lãi cao","Costly debt"), `${fmtM(c.highInt)} · ${T("lãi","rate")} 25–45%/${T("năm","yr")}`, T("Trả khoản lãi cao nhất trước.","Pay the costliest first.")],
+   "borrow:1.5": [T("Hay trễ hạn","Late payments"), T("Mất phí phạt, hại điểm CIC","Fees and a weaker CIC score"), T("Bật trích nợ tự động.","Turn on auto-debit.")],
+   "borrow:1.2": [T("Có nợ xấu CIC","Bad debt on CIC"), T("Khó vay mới nhiều năm","Blocks new credit for years"), T("Tất toán trước, theo dõi CIC.","Settle it, then track CIC.")],
+   "borrow:6": [n.sev==="critical"?T("Trả nợ quá nặng","Debt load too heavy"):T("Trả nợ sát ngưỡng","Debt near the limit"), `DSR ${pct(m.dsr)} / ≤ 35%`, T("Giãn kỳ hạn, dừng vay tiêu dùng.","Extend terms, stop consumer borrowing.")],
+   "protect:4": c.health==="none"? [T("Chưa có bảo hiểm sức khoẻ","No health cover"), T("Một lần nằm viện có thể cuốn sạch tiết kiệm","One hospital stay can wipe out savings"), T("Mua cho cả nhà, ưu tiên nội trú.","Cover the family, inpatient first.")]
+                                  : [T("Bảo hiểm sức khoẻ chưa tương xứng","Health cover too basic"), T("Gói cơ bản, hạn mức thấp","Basic plan, low limits"), T("Nâng lên gói cao cấp.","Upgrade to a premium plan.")],
+   "protect:5": [T("Thiếu bảo vệ thu nhập","Income protection gap"), `${fmtM(c.lifeCover)} / ${T("cần","need")} ${fmtM(m.lifeNeed)}`, T(`Bổ sung ${fmtM(m.lifeGap)} mệnh giá.`,`Add ${fmtM(m.lifeGap)} of cover.`)],
+   "protect:5.5": [T("Thiếu bảo hiểm bệnh hiểm nghèo","Critical illness gap"), `${fmtM(c.ciCover)} / ${T("cần","need")} ${fmtM(m.ciNeed)}`, T("Thêm quyền lợi bệnh hiểm nghèo.","Add critical illness cover.")],
+   "protect:9": [T("Chưa có di chúc","No will yet"), T("Dễ tranh chấp, chậm chuyển giao","Risk of disputes and delays"), T("Lập di chúc, chỉ định người thụ hưởng.","Make a will, name beneficiaries.")],
+   "protect:8.5": [T("Doanh nghiệp chưa được bảo vệ","Business unprotected"), T("Cả nhà phụ thuộc một người chủ","Family relies on one owner"), T("Bảo hiểm người chủ chốt + kế nhiệm.","Key-person cover + succession.")],
+   "invest:7": [T("Quỹ hưu trí thiếu","Retirement gap"), `${fmtM(m.projected)} / ${T("cần","need")} ${fmtM(m.corpus)}`, T(`Đầu tư thêm ${fmtM(m.reqMonthly)}/tháng.`,`Invest ${fmtM(m.reqMonthly)} more a month.`)],
+   "invest:7.2": [T("Quỹ học vấn cho con","Children education fund"), `${m.eduKids} ${T("con","child(ren)")} · ${T("cần","need")} ${fmtM(m.eduCost)}`, T(`Để riêng ${fmtM(m.eduMonthly)}/tháng.`,`Set aside ${fmtM(m.eduMonthly)} a month.`)],
+   "invest:8": [T("Tiền nằm im quá nhiều","Too much idle cash"), `${c.pctCash}% ${T("ở tiết kiệm, vàng","in deposits, gold")}`, T("Chuyển dần sang quỹ trong 6–12 tháng.","Phase into funds over 6–12 months.")],
+   "invest:8.2": [T("Dồn trứng một giỏ","Eggs in one basket"), `${c.concentration}% ${T("vào 1 tài sản","in one asset")} / ≤ 25%`, T("Giảm dần theo lộ trình.","Reduce on a schedule.")],
+   "invest:7.5": [T("Tài sản thấp so với tuổi","Low assets for age"), `${m.multiple.toFixed(1)}× / ${T("chuẩn","target")} ${m.multBench.toFixed(1)}× ${T("thu nhập năm","annual income")}`, T("Đầu tư đều mỗi tháng.","Invest every month.")],
+   "earn:10": [T("Cả nhà dựa một nguồn thu","One income, whole family"), `1 ${T("thu nhập","income")} · ${c.dependents} ${T("người phụ thuộc","dependants")}`, T("Bảo vệ nguồn thu đó trước.","Protect that income first.")],
+   "earn:10.5": [T("Thu nhập lên xuống","Income swings"), T("Tháng dư, tháng thiếu","Feast or famine months"), T("Tự trả 'lương nền', phần dư để dành.","Pay yourself a base salary, save the rest.")],
+   "earn:10.8": [T("Chưa có thu nhập thụ động","No passive income"), T("100% từ công việc","100% from work"), T("Xây dòng tiền từ trái phiếu, cho thuê.","Build income from bonds, rentals.")],
+  }[k];
+  if(C){ n.t=C[0]; n.f=C[1]; n.a=C[2]; }
+}
+function riskName(r){ return r==="conservative"?L("thận trọng","conservative"):r==="growth"?L("tăng trưởng","growth"):L("cân bằng","balanced"); }
+function tierOf(s){ return s>=80?{k:"ok",vi:"Khoẻ mạnh",en:"Healthy"}:s>=40?{k:"medium",vi:"Đang xoay xở",en:"Coping"}:{k:"critical",vi:"Dễ tổn thương",en:"Vulnerable"}; }
+const sevLabel = s => ({critical:L("Khẩn cấp","Critical"),high:L("Cao","High"),medium:L("Trung bình","Medium"),ok:L("Đạt","On track")}[s]);
+const sevColor = s => `var(--${s==="critical"?"crit":s==="high"?"hi":s==="medium"?"warn":"ok"})`;
+
+/* ---------------- state & storage ---------------- */
+const S = { view:"home", step:0, c:null, clients:[], store:"pending", confirmDel:false };
+let DB=null, COLL=null;
+function toast(msg){ const t=document.createElement("div"); t.className="toast"; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
+
+async function initStore(){
+  try{
+    const db = await window.claude?.use?.("db");
+    const user = await window.claude?.use?.("user");
+    const uid = user? await user.id() : null;
+    if(!db || !uid){ S.store="local"; try{ S.clients=JSON.parse(localStorage.getItem("ac-clients")||"[]"); }catch(_){ } render(); return; }
+    DB=db; COLL=db.collection("data/users/"+uid);
+    S.store="live";
+    COLL.onSnapshot(snap=>{ S.clients = snap.docs.map(d=>Object.assign({},d.data(),{id:d.id})).sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt))); if(S.view==="home") render(); },
+      err=>{ S.store="local"; if(S.view==="home") render(); });
+    render();
+  }catch(e){ S.store="local"; render(); }
+}
+async function saveClient(){
+  const c=S.c; if(c.demo){ toast(L("Đây là hồ sơ ví dụ, hãy tạo tư vấn mới để lưu","This is the example client. Start a new session to save.")); return; }
+  c.updatedAt=new Date().toISOString();
+  const r=analyse(c); c.score=r.overall;
+  if(!c.id) c.id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const body=JSON.parse(JSON.stringify(c)); delete body.id;
+  if(COLL){
+    try{ await COLL.doc(c.id).set(body); toast(L("Đã lưu hồ sơ","Client saved")); }
+    catch(e){ toast(L("Không lưu được: ","Could not save: ")+(e&&e.code||"error")); }
+  } else {
+    const i=S.clients.findIndex(x=>x.id===c.id); if(i>=0) S.clients[i]=Object.assign({},c); else S.clients.unshift(Object.assign({},c));
+    try{ localStorage.setItem("ac-clients",JSON.stringify(S.clients)); }catch(_){ }
+    toast(L("Đã lưu trên thiết bị này","Saved on this device"));
+  }
+}
+async function deleteClient(){
+  const c=S.c; if(!c||!c.id||c.demo) return;
+  if(COLL){ try{ await COLL.doc(c.id).delete(); }catch(e){ toast(L("Không xoá được","Could not delete")); return; } }
+  else { S.clients=S.clients.filter(x=>x.id!==c.id); try{ localStorage.setItem("ac-clients",JSON.stringify(S.clients)); }catch(_){ } }
+  toast(L("Đã xoá hồ sơ","Client deleted")); S.view="home"; S.c=null; S.confirmDel=false; render();
+}
+
+/* ---------------- rendering ---------------- */
+const app=document.getElementById("app"), bar=document.getElementById("bar");
+const visibleFields = st => { const w=eff(S.c).work; return (st.fields||[]).filter(f=>(!f.seg||f.seg.includes(S.c.segment))&&(!f.work||f.work.includes(w))); };
+
+function topbar(){
+  const back = S.view!=="home"? `<button class="iconbtn" data-a="back" aria-label="${L("Quay lại","Back")}">${I.back}</button>`:"";
+  return `<header class="top">${back}<div class="mark">${I.compass}<div><b>Advisor Compass</b><small>${L("Hoạch định tài chính 360°","360° financial planning")}</small></div></div>
+  <div class="lang" role="group" aria-label="Language"><button data-a="lang" data-v="vi" aria-pressed="${LANG==="vi"}">VI</button><button data-a="lang" data-v="en" aria-pressed="${LANG==="en"}">EN</button></div></header>`;
+}
+
+function viewHome(){
+  const st = S.store==="live"? `<span class="status live"><i></i>${L("Hồ sơ lưu riêng cho tài khoản của bạn","Clients saved privately to your account")}</span>`
+           : S.store==="local"? `<span class="status"><i></i>${L("Hồ sơ lưu trên thiết bị này","Clients saved on this device")}</span>` : `<span class="status"><i></i>${L("Đang kết nối…","Connecting…")}</span>`;
+  const list = [DEMO, ...S.clients].map(c=>{ const r=analyse(c); const t=tierOf(r.overall); const seg=SEGMENTS[c.segment];
+    const d = c.updatedAt? new Date(c.updatedAt).toLocaleDateString(LANG==="vi"?"vi-VN":"en-GB") : "";
+    return `<button class="cli" data-a="open" data-id="${esc(c.id)}"><span class="sc num" style="background:color-mix(in srgb,${sevColor(t.k)} 14%,transparent);color:${sevColor(t.k)}">${r.overall}</span>
+      <span><b>${esc(c.name||L("Chưa đặt tên","Unnamed"))}</b> ${c.demo?`<span class="tag demo">${L("Ví dụ","Example")}</span>`:""}<br><span class="meta">${seg?esc(L(seg.vi,seg.en)):""}${c.age?" · "+c.age+" "+L("tuổi","yrs"):""}${d?" · "+d:""}</span></span>
+      <span class="sev ${t.k}">${L(t.vi,t.en)}</span></button>`; }).join("");
+  return `<main>
+  <section class="hero"><svg class="deco" width="180" height="180" viewBox="0 0 32 32"><circle cx="16" cy="16" r="14.5" fill="none" stroke="#C8102E" stroke-width=".8"/><path d="M16 5l3.2 11L16 27l-3.2-11z" fill="#C8102E"/></svg>
+   <div class="eyebrow" style="color:var(--whiskey)">${L("Công cụ cho chuyên viên tư vấn","For financial advisors")}</div>
+   <h1>${L("Đo <em>BMI tài chính</em> trong 60 giây","Measure a <em>financial BMI</em> in 60 seconds")}</h1>
+   <p>${L("8 câu hỏi · 1 chỉ số · 1 kế hoạch hành động","8 questions · 1 score · 1 action plan")}</p>
+   <button class="btn btn-primary" data-a="new">${L("Khám sức khoẻ tài chính · 60 giây","Start the 60-second check-up")}</button></section>
+  <div class="sec"><h2>${L("Khách hàng","Clients")}</h2>${st}</div>
+  <div class="list">${list}</div>
+  <p class="note">${L("Hồ sơ chỉ bạn xem được.","Client files are private to you.")}</p>
+  </main>`;
+}
+
+function viewSegment(){
+  return `<main>${progress()}
+  <div class="eyebrow">${L("Bước 1","Step 1")}</div><h1>${L("Khách hàng thuộc phân khúc nào?","Which segment is the client in?")}</h1>
+  <p class="lede">${L("Phân khúc quyết định độ sâu câu hỏi, chuẩn tham chiếu và nhóm giải pháp gợi ý. Ngưỡng chỉ mang tính tham khảo.","The segment sets question depth, benchmarks and solution sets. Thresholds are indicative.")}</p>
+  <div class="segs">${Object.entries(SEGMENTS).map(([k,s])=>`<button class="seg" data-a="seg" data-v="${k}" aria-pressed="${S.c.segment===k}">
+    <span class="tier">${tierIcon(s.n)}</span><b>${L(s.vi,s.en)}</b><span class="range-t num">${L(s.rvi,s.ren)}</span><span class="focus">${L(s.fvi,s.fen)}</span></button>`).join("")}</div></main>`;
+}
+function progress(){ return `<div class="prog" aria-hidden="true">${STEPS.map((s,i)=>`<i class="${i<S.step?"done":i===S.step?"on":""}"></i>`).join("")}</div>`; }
+
+function fieldHTML(f){
+  const v=S.c[f.k]; const d=(DEFAULTS[S.c.segment]||{})[f.k] ?? (BS_DEF[S.c.segment]||{})[f.k]; const lab=L(f.vi,f.en); const id="f-"+f.k;
+  const hint=f.hvi?`<div class="hint">${esc(L(f.hvi,f.hen))}</div>`:"";
+  const isM = f.uvi && /tr ₫/.test(f.uvi);
+  if(f.t==="num"||f.t==="text"){
+    const ph = f.t==="text"? L("VD: Anh Minh","e.g. Mr Minh") : (d!=null? String(d):"");
+    const shown = v==null||v===""? d : v;
+    const conv = isM && n0(shown)>=1000? "= "+fmtM(shown)+(v==null||v===""?" · "+L("giả định","assumed"):"") : "";
+    return `<div class="field"><label for="${id}">${esc(lab)}</label><div class="inwrap"><input id="${id}" data-k="${f.k}" placeholder="${esc(ph)}" ${f.t==="num"?'inputmode="decimal" type="number" min="0" step="any"':'type="text" autocomplete="off"'} value="${v==null?"":esc(v)}">${f.uvi?`<span class="unit">${esc(L(f.uvi,f.uen))}</span>`:""}</div>${hint}<div class="hint num" data-conv="${f.k}">${conv}</div></div>`;
+  }
+  if(f.t==="choice"||f.t==="multi"){
+    return `<div class="field"><span class="flabel" id="${id}">${esc(lab)}</span><div class="choices" role="group" aria-labelledby="${id}">${f.opts.map(o=>{const on=f.t==="multi"?(v||[]).includes(o.v):v===o.v; const sug=f.t==="choice"&&(v==null)&&d===o.v;
+      return `<button class="choice${sug?" sug":""}" data-a="${f.t}" data-k="${f.k}" data-v="${o.v}" aria-pressed="${on}">${esc(L(o.vi,o.en))}${sug?`<em>${L("giả định","assumed")}</em>`:""}</button>`;}).join("")}</div>${hint}</div>`;
+  }
+  if(f.t==="pair"){
+    const D=BS_DEF[S.c.segment]||{}; const kb=f.k+"_b", kp=f.k+"_p";
+    const inp=(k,ph,u)=>`<div class="inwrap"><input id="f-${k}" data-k="${k}" type="number" inputmode="decimal" min="0" step="any" placeholder="${ph??""}" value="${S.c[k]==null?"":esc(S.c[k])}"><span class="unit">${u}</span></div>`;
+    return `<div class="field"><span class="flabel">${esc(lab)}</span><div class="pair">${inp(kb,D[kb],L("dư nợ, tr","owed, m"))}${inp(kp,D[kp],L("tr/tháng","m/mo"))}</div></div>`;
+  }
+  if(f.t==="kids"){
+    const ks=S.c.kids||[];
+    return `<div class="field"><span class="flabel">${esc(lab)}</span>
+     ${ks.map((k,i)=>`<div class="kid"><div class="kidh"><b>${L("Con","Child")} ${i+1}</b><button class="linkbtn" data-a="kiddel" data-i="${i}">${L("Xoá","Remove")}</button></div>
+       <div class="pair"><div class="inwrap"><input data-kid="${i}" data-f="age" type="number" inputmode="numeric" min="0" max="30" placeholder="${L("tuổi","age")}" value="${k.age??""}"><span class="unit">${L("tuổi","yrs")}</span></div>
+       <div class="inwrap"><input data-kid="${i}" data-f="cost" type="number" inputmode="decimal" min="0" step="any" placeholder="${EDU_COST[k.plan||"public"]}" value="${k.cost??""}"><span class="unit">${L("tr học vấn","m edu")}</span></div></div>
+       <div class="choices">${EDU_PLANS.map(o=>`<button class="choice" data-a="kidplan" data-i="${i}" data-v="${o.v}" aria-pressed="${(k.plan||"public")===o.v}">${esc(L(o.vi,o.en))} <em>${fmtM(EDU_COST[o.v])}</em></button>`).join("")}</div></div>`).join("")}
+     <button class="btn btn-ghost btn-sm" data-a="kidadd">+ ${L("Thêm con","Add child")}</button></div>`;
+  }
+  if(f.t==="lifestyle"){
+    const tier=RET_PCT[S.c.segment]||RET_PCT.massaff; const cur=S.c.lifestyle;
+    const O=[["minimal",L("Tối giản","Simpler")],["current",L("Như hiện tại","As today")],["higher",L("Thoải mái hơn","More comfortable")]];
+    return `<div class="field"><span class="flabel">${esc(lab)}</span><div class="choices">${O.map(([v,t],i)=>{const sug=cur==null&&v==="current"; return `<button class="choice${sug?" sug":""}" data-a="choice" data-k="lifestyle" data-v="${v}" aria-pressed="${cur===v}">${t} · ${tier[i]}%${sug?`<em>${L("gợi ý","suggested")}</em>`:""}</button>`;}).join("")}</div><div class="hint">${L("% chi tiêu hiện tại cần duy trì khi nghỉ hưu, gợi ý theo phân khúc","% of today's spending to keep in retirement, tailored by segment")}</div></div>`;
+  }
+  if(f.t==="bs"){ return `<div id="bsbox">${bsHTML()}</div>`; }
+  if(f.t==="range"){
+    const shown = v==null? n0(d) : n0(v);
+    return `<div class="field"><label for="${id}">${esc(lab)}</label><div class="range${v==null?" is-sug":""}"><input id="${id}" type="range" data-k="${f.k}" min="${f.min}" max="${f.max}" step="${f.step}" value="${shown}"><output class="num" data-out="${f.k}">${shown}${f.suf}</output></div>${v==null?`<div class="hint">${L("Đang dùng giả định theo phân khúc, kéo để điều chỉnh","Using the segment assumption; drag to adjust")}</div>`:""}${hint}</div>`;
+  }
+  return "";
+}
+function holdingsHTML(st){
+  if(!st.pillar) return "";
+  const ce=eff(S.c); const items = CATALOG.filter(p=>p.pillar===st.pillar && prodFits(p,ce));
+  if(!items.length) return "";
+  const h=S.c.holdings||[];
+  return `<div class="field holdings"><span class="flabel">${L("Khách hàng đang dùng sản phẩm nào?","Which products does the client already use?")}</span>
+   <div class="choices">${items.map(p=>`<button class="choice" data-a="hold" data-v="${p.id}" aria-pressed="${h.includes(p.id)}">${esc(L(p.vi,p.en))}</button>`).join("")}</div>
+   <details class="universe"><summary>${L("Đề cử sản phẩm tốt nhất thị trường","Best-in-market picks")} · ${items.length}</summary>
+   ${items.map(p=>productCardHTML(p,h.includes(p.id))).join("")}
+   </details></div>`;
+}
+function bsHTML(){
+  if(!S.c||!S.c.segment) return ""; const r=analyse(S.c); if(r.empty) return ""; const ce=r.ce, bs=ce.bs;
+  const liq=n0(ce.liquid), inv=bs? bs.bond+bs.equity+bs.gold+bs.invest : n0(ce.investable);
+  const ill=bs? bs.re+bs.biz+bs.home+bs.other : 0, debt=n0(ce.debtTotal), tot=liq+inv+ill, nw=tot-debt;
+  const mx=Math.max(tot,debt,1), w=v=>Math.max(1.5,v/mx*100);
+  const row=(l,v,c)=>`<div class="bsr"><span>${l}</span><span class="bst"><i style="width:${w(v)}%;background:${c}"></i></span><b class="num">${fmtM(v)}</b></div>`;
+  return `<div class="bsbox"><div class="ih"><span class="eyebrow">${L("Bảng cân đối","Balance sheet")}</span><span class="num nw">${L("Ròng","Net")} ${fmtM(nw)}</span></div>
+   ${row(L("Thanh khoản","Liquid"),liq,"var(--ok)")}${row(L("Đầu tư","Investable"),inv,"var(--riverbed-hi)")}${row(L("Khó bán","Illiquid"),ill,"var(--whiskey)")}${row(L("Nợ","Debt"),debt,"var(--crimson)")}
+   ${bs?"":`<p class="hint">${L("Khai chi tiết ở bước Tài sản & Vay nợ để chính xác hơn.","Fill in Assets & Borrow for a precise view.")}</p>`}</div>`;
+}
+function viewStep(){
+  const st=STEPS[S.step];
+  return `<main>${progress()}
+  <div class="live" id="live">${liveHTML()}</div>
+  <div class="stephead"><span class="pill-ico">${I[st.icon]}</span><div><div class="eyebrow">${L("Bước","Step")} ${S.step+1}/${STEPS.length-1}</div><h1 style="margin:0">${esc(L(st.vi,st.en))}</h1></div></div>
+  <div class="script"><div class="lbl">${I.chat}${L("Gợi ý lời thoại","Suggested script")}</div><p>“${esc(L(st.svi,st.sen))}”</p>
+   <details class="why"><summary>${L("Vì sao hỏi","Why we ask")}</summary><p>${esc(L(st.wvi,st.wen))}</p></details></div>
+  <div class="fields">${visibleFields(st).map(fieldHTML).join("")}<div id="insight">${insightHTML(st)}</div>${holdingsHTML(st)}</div></main>`;
+}
+
+function radarSVG(scores){
+  const W=360,H=280,cx=180,cy=140,R=92; const N=PILLARS.length;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/N; return [cx+r*Math.cos(a), cy+r*Math.sin(a)];};
+  const ring=f=>PILLARS.map((_,i)=>pt(i,R*f).map(x=>x.toFixed(1)).join(",")).join(" ");
+  const poly=PILLARS.map((p,i)=>pt(i,R*scores[p.k]/100).map(x=>x.toFixed(1)).join(",")).join(" ");
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("Biểu đồ 6 trụ cột","Six-pillar chart")}"><defs><radialGradient id="rdG" cx="50%" cy="50%" r="60%"><stop offset="0" stop-color="#FF4658" stop-opacity=".40"/><stop offset="1" stop-color="#CE9B74" stop-opacity=".22"/></radialGradient></defs>`;
+  [.25,.5,.75,1].forEach(f=>s+=`<polygon points="${ring(f)}" fill="none" stroke="var(--line)" stroke-width="1"/>`);
+  s+=`<polygon points="${ring(.8)}" fill="none" stroke="var(--whiskey)" stroke-width="1.2" stroke-dasharray="4 4"/>`;
+  PILLARS.forEach((_,i)=>{const [x,y]=pt(i,R); s+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--line)"/>`;});
+  s+=`<polygon points="${poly}" fill="url(#rdG)" stroke="#FF4658" stroke-width="1.8" stroke-linejoin="round" style="filter:drop-shadow(0 4px 8px rgba(237,27,46,.25))"/>`;
+  PILLARS.forEach((p,i)=>{const [x,y]=pt(i,R*scores[p.k]/100); s+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.5" fill="#fff" stroke="#FF4658" stroke-width="2"/>`;
+    const [lx,ly]=pt(i,R+22); const anchor=Math.abs(lx-cx)<8?"middle":lx>cx?"start":"end";
+    s+=`<text x="${lx.toFixed(1)}" y="${(ly-2).toFixed(1)}" text-anchor="${anchor}" font-size="11.5" font-weight="600" fill="#18222A" letter-spacing=".3" font-family="Be Vietnam Pro, system-ui, sans-serif">${esc(L(p.vi,p.en))}</text>
+          <text x="${lx.toFixed(1)}" y="${(ly+12).toFixed(1)}" text-anchor="${anchor}" font-size="11" fill="${sevColor(scores[p.k]>=80?"ok":scores[p.k]>=55?"medium":scores[p.k]>=35?"high":"critical")}" font-weight="700" font-family="Be Vietnam Pro, system-ui, sans-serif">${scores[p.k]}</text>`;});
+  s+=`<text x="${W-6}" y="${H-6}" text-anchor="end" font-size="10" fill="var(--mute)" font-family="Be Vietnam Pro, system-ui, sans-serif">- - ${L("Ngưỡng khoẻ mạnh 80","Healthy threshold 80")}</text></svg>`;
+  return s;
+}
+function ringSVG(v,color){ const r=40,c=2*Math.PI*r; return `<svg width="96" height="96" viewBox="0 0 92 92"><defs><linearGradient id="rgG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${color}"/><stop offset="1" stop-color="var(--whiskey-hi)"/></linearGradient></defs><circle cx="46" cy="46" r="${r}" fill="none" stroke="rgba(69,85,96,.10)" stroke-width="7"/><circle cx="46" cy="46" r="${r}" fill="none" stroke="url(#rgG)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${(c*v/100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 46 46)" style="filter:drop-shadow(0 2px 4px rgba(0,0,0,.12))"/></svg>`; }
+
+function viewReport(){
+  const c=S.c, r=analyse(c), m=r.m, seg=SEGMENTS[c.segment], ce=r.ce;
+  if(r.empty) return `<main><h1>${L("Chưa đủ dữ liệu","Not enough data")}</h1><p class="lede">${L("Cần tối thiểu thu nhập ròng để phân tích. Quay lại bước Thu nhập.","Net income is needed for the analysis. Go back to Earn.")}</p></main>`;
+  const t=tierOf(r.overall); const pj=projectPlan(c,r); const upm=new Map(r.needs.map(n=>[n,upliftOf(n,c,r.overall)]));
+  const row=(lab,val,bench,ok)=>`<tr><td><span class="dot" style="background:${ok?"var(--ok)":"var(--hi)"}"></span>${lab}</td><td class="v num">${val}</td><td class="b num">${bench}</td></tr>`;
+  const goalsTxt=(c.goals||[]).map(g=>{const o=GOALS.find(x=>x.v===g);return o?L(o.vi,o.en):g;}).join(" · ");
+  let retire="";
+  if(m.corpus){ const mx=Math.max(m.corpus,m.projected); const w=v=>Math.max(2,Math.round(v/mx*100));
+    retire=`<div class="sec"><h2>${L("Hưu trí","Retirement")}</h2><span class="eyebrow">${L("Theo giá hôm nay","Today's money")}</span></div>
+    <div class="retire"><div class="bars">
+      <div class="row"><span>${L("Cần có","Needed")}</span><span class="track"><span class="fill" style="display:block;width:${w(m.corpus)}%;background:linear-gradient(90deg,var(--riverbed),var(--riverbed-hi))"></span></span><b class="num">${fmtM(m.corpus)}</b></div>
+      <div class="row"><span>${L("Dự phóng","Projected")}</span><span class="track"><span class="fill" style="display:block;width:${w(m.projected)}%;background:${m.retGap>0?"linear-gradient(90deg,var(--crimson-lo),var(--crimson-hi))":"var(--ok)"};box-shadow:0 0 10px rgba(237,27,46,.5)"></span></span><b class="num">${fmtM(m.projected)}</b></div></div>
+      <p class="note" style="margin-top:10px">${L(`Chi hưu ${Math.round((m.retPct||.7)*100)}% chi tiêu (${fmtM(m.retSpend||0)}/tháng)${m.pension?` · BHXH ${fmtM(m.pension)}`:""}${m.rentInc?` · thuê ${fmtM(m.rentInc)}`:""} · rút 4%/năm · lợi suất danh nghĩa theo lớp tài sản, lạm phát 4%.`,`Retirement spend ${Math.round((m.retPct||.7)*100)}% (${fmtM(m.retSpend||0)}/mo)${m.pension?` · pension ${fmtM(m.pension)}`:""}${m.rentInc?` · rent ${fmtM(m.rentInc)}`:""} · 4% withdrawal · nominal returns by asset class, 4% inflation.`)}</p></div>`; }
+  const needs = r.needs.length? r.needs.map((n,i)=>`<article class="need ${n.sev}"><div class="nh"><span class="rank num">${i+1}</span><div style="flex:1">
+      <h3>${esc(n.t)}</h3><div class="pmeta"><span class="sev ${n.sev}">${sevLabel(n.sev)}</span><span class="tag">${pName(n.pillar)}</span>${upm.get(n)>0?`<span class="tag up">+${upm.get(n)} BMI</span>`:""}</div></div></div>
+      <div class="nf"><span class="num">${esc(n.f)}</span></div><p class="act">→ ${esc(n.a)}</p>
+      ${n.products&&n.products.length? `<details class="sols"${i<3&&!n.deferred?" open":""}><summary>${L("Giải pháp đề xuất","Recommended solutions")} · ${n.products.length}${n.deferred?` <span class="tag defer">${L("Sau khi xử lý nợ & dự phòng","After debt & buffer are fixed")}</span>`:""}</summary><div class="prods">${n.products.map(o=>productCardHTML(o.p,(c.holdings||[]).includes(o.p.id),o.fit)).join("")}</div></details>` : `<div class="sol">${n.s.map(x=>`<span>${esc(x)}</span>`).join("")}</div>`}</article>`).join("")
+    : `<div class="need"><span class="sev ok">${sevLabel("ok")}</span><p class="act">${L("Các chỉ số đều đạt chuẩn. Tập trung tối ưu danh mục và rà soát định kỳ 6 tháng.","All indicators meet benchmarks. Focus on portfolio optimisation and a six-monthly review.")}</p></div>`;
+  return `<main>
+  <div class="rhead"><div><div class="eyebrow">${L("Kế hoạch tài chính","Financial plan")}</div><h1 style="margin:2px 0 4px">${esc(c.name||L("Khách hàng","Client"))}</h1>
+   <div class="pmeta"><span class="tag">${esc(L(seg.vi,seg.en))}</span>${ce.age?`<span class="tag">${ce.age} ${L("tuổi","yrs")}</span>`:""}${c.demo?`<span class="tag demo">${L("Ví dụ","Example")}</span>`:""}</div></div></div>
+  <section class="bmi">
+   <div class="bmitop"><div><div class="eyebrow">${L("BMI tài chính · FinHealth Score","Financial BMI · FinHealth Score")}</div>
+     <div class="bmiv"><span class="num" style="color:${sevColor(t.k)}">${r.overall}</span><small>/100</small><em style="color:${sevColor(t.k)}">${L(t.vi,t.en)}</em></div></div></div>
+   ${gaugeHTML(r.overall)}
+   <div class="note" style="margin-top:8px">${L(`${r.needs.length} điểm cần cải thiện`,`${r.needs.length} areas to improve`)}${goalsTxt?" · "+L("Mục tiêu: ","Goals: ")+esc(goalsTxt):""}</div>
+  </section>
+  ${r.assumed.length&&!c.demo?`<div class="assume">${L(`${r.assumed.length} số liệu đang là giả định.`,`${r.assumed.length} inputs are assumptions.`)} <button class="linkbtn" data-a="edit">${L("Rà soát","Review")}</button></div>`:""}
+
+  ${pj.score>r.overall?`<section class="plan90"><div class="eyebrow">${L("Kế hoạch 90 ngày","90-day plan")}</div>
+   <div class="p90v"><span class="num">${r.overall}</span><i>→</i><b class="num">${pj.score}</b><em>${L(tierOf(pj.score).vi,tierOf(pj.score).en)}</em></div>
+   <ol>${pj.ups.map(o=>`<li><span>${esc(o.n.t)}</span><b class="num">+${o.u}</b></li>`).join("")}<li><span>${L("Cam kết kế hoạch hôm nay","Commit to the plan today")}</span><b class="num">✓</b></li></ol></section>`:""}
+  <div class="sec"><h2>${L("Lộ trình hành động","Action plan")}</h2><span class="eyebrow">${L("Theo thứ tự ưu tiên","In priority order")}</span></div>
+  ${needs}
+  <div class="sec"><h2>${L("Chẩn đoán chi tiết","Full diagnosis")}</h2></div>
+  ${bsHTML()}
+  <div class="vitals">
+   <div class="vital"><span class="eyebrow">${L("Tích luỹ tài sản","Wealth index")}</span><b class="num" style="color:${sevColor(wealthBand(r.fh.wi).k)}">${r.fh.wi.toFixed(2)}×</b><span>${L(wealthBand(r.fh.wi).vi,wealthBand(r.fh.wi).en)}</span></div>
+   <div class="vital"><span class="eyebrow">${L("Tự do tài chính","Freedom ratio")}</span><b class="num" style="color:${sevColor(freedomBand(r.fh.freedom).k)}">${pct(r.fh.freedom)}</b><span>${L(freedomBand(r.fh.freedom).vi,freedomBand(r.fh.freedom).en)}</span></div>
+   <div class="vital"><span class="eyebrow">${L("Sức chịu đựng","Runway")}</span><b class="num" style="color:${sevColor(m.efMonths>=m.efTarget?"ok":m.efMonths>=1?"medium":"critical")}">${m.efMonths>=99?"–":m.efMonths.toFixed(1)}</b><span>${L("tháng không thu nhập","months without income")}</span><small>${L("Chuẩn","Target")} ${m.efTarget} ${L("tháng","months")}</small></div>
+  </div>
+  <div class="sec"><h2>${L("8 chỉ số thành phần","8 components")}</h2><span class="eyebrow">Spend · Save · Borrow · Plan</span></div>
+  <div class="comps">${r.fh.ind.map(x=>`<div class="comp"><div class="ch"><span>${esc(L(x.vi,x.en))}</span><b class="num" style="color:${sevColor(x.v>=80?"ok":x.v>=50?"medium":x.v>=25?"high":"critical")}">${x.v}</b></div><div class="cbar"><i style="width:${Math.max(3,x.v)}%;background:${sevColor(x.v>=80?"ok":x.v>=50?"medium":x.v>=25?"high":"critical")}"></i></div><small>${esc(x.d)}</small></div>`).join("")}</div>
+  <div class="sec"><h2>${L("6 trụ cột","Six pillars")}</h2></div>
+  <div class="radar-wrap">${radarSVG(r.scores)}</div>
+  <div class="sec"><h2>${L("Chỉ số chính","Key ratios")}</h2></div>
+  <div class="kpiwrap"><table class="kpis"><thead><tr><th>${L("Chỉ số","Ratio")}</th><th style="text-align:right">${L("Hiện tại","Now")}</th><th style="text-align:right">${L("Chuẩn","Benchmark")}</th></tr></thead><tbody>
+   ${row(L("Chi tiêu / thu nhập","Spending / income"),pct(m.spendRatio),"≤ 70%",m.spendRatio<=.7)}
+   ${row(L("Tỷ lệ tiết kiệm","Savings rate"),pct(m.saveRate),"≥ "+pct(seg.saveT),m.saveRate>=seg.saveT)}
+   ${row(L("Quỹ dự phòng","Emergency fund"),m.efMonths>=99?"–":m.efMonths.toFixed(1)+" "+L("th","mo"),m.efTarget+" "+L("tháng","months"),m.efMonths>=m.efTarget)}
+   ${row("DSR",pct(m.dsr),"≤ 35%",m.dsr<=.35)}
+   ${row(L("Tài sản đầu tư / thu nhập năm","Investable / annual income"),m.multiple.toFixed(1)+"×","≈ "+m.multBench.toFixed(1)+"×",m.multiple>=m.multBench*.6)}
+   ${row(L("Bảo hiểm nhân thọ","Life cover"),fmtM(ce.lifeCover),fmtM(m.lifeNeed),m.lifeGap<=0)}
+  </tbody></table></div>
+  ${retire}
+  <div class="sec"><h2>${L("Ghi chú & hẹn gặp lại","Notes & follow-up")}</h2></div>
+  <div class="fields"><div class="field"><label for="f-followUp">${L("Ngày hẹn rà soát","Review date")}</label><div class="inwrap"><input id="f-followUp" type="date" data-k="followUp" value="${esc(c.followUp||"")}"></div></div>
+   <div class="field"><label for="f-notes">${L("Ghi chú buổi tư vấn","Session notes")}</label><textarea id="f-notes" class="ta" data-k="notes">${esc(c.notes||"")}</textarea></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button class="btn btn-ghost btn-sm" data-a="copy">${L("Sao chép tóm tắt","Copy summary")}</button><button class="btn btn-ghost btn-sm" data-a="edit">${L("Sửa thông tin","Edit answers")}</button>
+   ${c.id&&!c.demo? (S.confirmDel? `<span class="confirm">${L("Xoá hồ sơ này?","Delete this client?")} <button class="btn btn-sm" style="background:var(--crit);color:#fff" data-a="del-yes">${L("Xoá","Delete")}</button><button class="btn btn-ghost btn-sm" data-a="del-no">${L("Huỷ","Cancel")}</button></span>` : `<button class="btn btn-ghost btn-sm" data-a="del">${L("Xoá hồ sơ","Delete client")}</button>`):""}</div>
+  <p class="disc">${L("Kết quả tham khảo từ thông tin khách cung cấp. Kiểm tra mức độ phù hợp trước khi tư vấn sản phẩm.","Indicative, based on client inputs. Run suitability checks before recommending products.")}</p>
+  </main>`;
+}
+
+function renderBar(){
+  if(S.view==="home"){ bar.innerHTML=""; return; }
+  if(S.view==="qintro"){ bar.innerHTML=`<div class="bar-in"><button class="btn btn-ghost" data-a="back">${L("Trước","Back")}</button><button class="btn btn-primary" data-a="qstart">${L("Bắt đầu 8 câu hỏi","Start 8 questions")}</button></div>`; return; }
+  if(S.view==="quick"){ bar.innerHTML=`<div class="bar-in"><button class="btn btn-ghost" data-a="back">${L("Trước","Back")}</button><button class="btn btn-ghost" style="flex:1" data-a="qskip">${L("Bỏ qua, dùng giả định","Skip, use assumption")}</button></div>`; return; }
+  if(S.view==="reveal"){ bar.innerHTML=`<div class="bar-in"><button class="btn btn-ghost" data-a="deep">${L("Hỏi chi tiết","Deep-dive")}</button><button class="btn btn-primary" data-a="toplan">${L("Xem kế hoạch nâng điểm","See the plan")}</button></div>`; return; }
+  if(S.view==="wizard"){
+    const st=STEPS[S.step]; const canNext = S.step===0? !!S.c.segment : true;
+    const last = S.step===STEPS.length-2;
+    bar.innerHTML=`<div class="bar-in">${S.step>0?`<button class="btn btn-ghost" data-a="prev">${L("Trước","Back")}</button>`:""}<button class="btn btn-primary" data-a="next" ${canNext?"":"disabled"}>${last?L("Xem kế hoạch","See the plan"):L("Tiếp tục","Continue")}</button></div>`;
+    return;
+  }
+  bar.innerHTML=`<div class="bar-in"><button class="btn btn-ghost" data-a="home">${L("Danh sách","Clients")}</button><button class="btn btn-primary" data-a="save">${S.c.demo?L("Tư vấn khách mới","New session"):L("Lưu hồ sơ","Save client")}</button></div>`;
+}
+
+function render(){
+  document.documentElement.lang=LANG;
+  let body="";
+  if(S.view==="home") body=viewHome();
+  else if(S.view==="wizard") body = S.step===0? viewSegment() : viewStep();
+  else if(S.view==="qintro") body=viewQuickIntro();
+  else if(S.view==="quick") body=viewQuick();
+  else if(S.view==="reveal") body=viewReveal();
+  else body=viewReport();
+  app.innerHTML=topbar()+body; renderBar();
+  if(S.view==="reveal") animateReveal();
+}
+
+/* ---------------- events ---------------- */
+function go(view,step){ S.view=view; if(step!=null) S.step=step; S.confirmDel=false; render(); window.scrollTo(0,0); }
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]"); if(!b) return; const a=b.dataset.a;
+  if(a==="lang"){ LANG=b.dataset.v; try{localStorage.setItem("ac-lang",LANG);}catch(_){ } render(); return; }
+  if(a==="new"){ S.c=blankClient(); go("wizard",0); return; }
+  if(a==="open"){ const id=b.dataset.id; const c = id==="demo"? JSON.parse(JSON.stringify(DEMO)) : S.clients.find(x=>x.id===id); if(!c) return; S.c=JSON.parse(JSON.stringify(c)); go("report"); return; }
+  if(a==="seg"){ S.c.segment=b.dataset.v; render(); return; }
+  if(a==="choice"){ const k=b.dataset.k; S.c[k]= S.c[k]===b.dataset.v? null : b.dataset.v; render(); return; }
+  if(a==="multi"){ const k=b.dataset.k; const arr=new Set(S.c[k]||[]); arr.has(b.dataset.v)?arr.delete(b.dataset.v):arr.add(b.dataset.v); S.c[k]=[...arr]; render(); return; }
+  if(a==="hold"){ const arr=new Set(S.c.holdings||[]); arr.has(b.dataset.v)?arr.delete(b.dataset.v):arr.add(b.dataset.v); S.c.holdings=[...arr]; render(); return; }
+  if(a==="kidadd"){ S.c.kids=(S.c.kids||[]).concat([{age:null,plan:"public",cost:null}]); render(); return; }
+  if(a==="kiddel"){ S.c.kids=(S.c.kids||[]).filter((_,i)=>i!==+b.dataset.i); render(); return; }
+  if(a==="kidplan"){ const k=S.c.kids[+b.dataset.i]; k.plan=b.dataset.v; k.cost=null; render(); return; }
+  if(a==="deps"){ S.c.dependents=+b.dataset.v; if(S.c.family==null) S.c.family=S.c.dependents>0?"kids":null; render(); return; }
+  if(a==="qstart"){ S.q=0; go("quick"); return; }
+  if(a==="qans"||a==="qskip"){ const Q=QUICK[S.q]; S.c.qc=Object.assign({},S.c.qc||{}); if(a==="qans") S.c.qc[Q.k]=b.dataset.v; applyQuick(S.c);
+    if(a==="qans"){ render(); setTimeout(()=>{ if(S.q<QUICK.length-1){ S.q++; go("quick"); } else go("reveal"); },220); }
+    else { if(S.q<QUICK.length-1){ S.q++; go("quick"); } else go("reveal"); } return; }
+  if(a==="toplan"){ go("report"); return; }
+  if(a==="deep"){ go("wizard",1); return; }
+  if(a==="next"){ if(S.step===0){ go("qintro"); return; } if(S.step>=STEPS.length-2) go("report"); else go("wizard",S.step+1); return; }
+  if(a==="prev"){ go("wizard",Math.max(0,S.step-1)); return; }
+  if(a==="back"&&S.view==="qintro"){ go("wizard",0); return; }
+  if(a==="back"&&S.view==="quick"){ if(S.q>0){ S.q--; go("quick"); } else go("qintro"); return; }
+  if(a==="back"&&S.view==="reveal"){ S.q=QUICK.length-1; go("quick"); return; }
+  if(a==="back"){ if(S.view==="wizard"&&S.step>0) go("wizard",S.step-1); else if(S.view==="report"&&!S.c.demo&&!S.c.id) go("wizard",STEPS.length-2); else go("home"); return; }
+  if(a==="home"){ go("home"); return; }
+  if(a==="edit"){ if(S.c.demo){ S.c.demo=false; S.c.id=null; S.c.name=S.c.name+" (copy)"; } go("wizard",1); return; }
+  if(a==="save"){ if(S.c.demo){ S.c=blankClient(); go("wizard",0); } else saveClient(); return; }
+  if(a==="copy"){ copySummary(); return; }
+  if(a==="del"){ S.confirmDel=true; render(); return; }
+  if(a==="del-no"){ S.confirmDel=false; render(); return; }
+  if(a==="del-yes"){ deleteClient(); return; }
+});
+document.addEventListener("input",e=>{ setTimeout(updateLive,0);
+  const el=e.target; if(el.dataset&&el.dataset.kid!=null&&S.c){ const kk=S.c.kids[+el.dataset.kid]; kk[el.dataset.f]= el.value===""? null : Number(el.value); return; }
+  const k=el.dataset&&el.dataset.k; if(!k||!S.c) return;
+  if(el.type==="number"){ S.c[k]= el.value===""? null : Number(el.value); const conv=document.querySelector(`[data-conv="${k}"]`); if(conv){ const d=(DEFAULTS[S.c.segment]||{})[k]; const shown=S.c[k]==null?d:S.c[k]; const f=STEPS[S.step]&&visibleFields(STEPS[S.step]).find(x=>x.k===k); conv.textContent = f&&f.uvi&&/tr ₫/.test(f.uvi)&&n0(shown)>=1000? "= "+fmtM(shown)+(S.c[k]==null?" · "+L("giả định","assumed"):"") : ""; } }
+  else if(el.type==="range"){ S.c[k]=Number(el.value); const o=document.querySelector(`[data-out="${k}"]`); if(o) o.textContent=el.value+"%"; const w=el.closest(".range"); if(w) w.classList.remove("is-sug"); }
+  else S.c[k]=el.value;
+});
+
+function copySummary(){
+  const c=S.c, r=analyse(c), seg=SEGMENTS[c.segment];
+  const lines=[`${c.name||L("Khách hàng","Client")} · ${L(seg.vi,seg.en)} · ${L("Sức khoẻ tài chính","Financial health")}: ${r.overall}/100 (${L(tierOf(r.overall).vi,tierOf(r.overall).en)})`, "",
+    ...PILLARS.map(p=>`${L(p.vi,p.en)}: ${r.scores[p.k]}`), "", L("Ưu tiên hành động:","Priority actions:"),
+    ...r.needs.map((n,i)=>`${i+1}. [${sevLabel(n.sev)}] ${n.t}: ${n.a}`)];
+  if(c.followUp) lines.push("", L("Hẹn rà soát: ","Review date: ")+c.followUp);
+  const txt=lines.join("\n");
+  const fallback=()=>{ const ta=document.getElementById("f-notes"); toast(L("Không truy cập được clipboard","Clipboard unavailable")); };
+  try{ navigator.clipboard.writeText(txt).then(()=>toast(L("Đã sao chép tóm tắt","Summary copied")),fallback); }catch(_){ fallback(); }
+}
+
+render();
+initStore();
+})();
+</script>
+
+</body>
+</html>
