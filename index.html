@@ -691,18 +691,18 @@ const STEPS = [
   {id:"invest", icon:"retire", pillar:"invest", vi:"Hưu trí & đầu tư", en:"Retirement & investing",
    svi:"Anh/chị muốn nghỉ hưu ở tuổi nào, và lúc đó muốn sống thế nào: tối giản, như bây giờ hay thoải mái hơn?",
    sen:"When would you like to retire, and how do you want to live then: simpler, as now, or more comfortably?",
-   wvi:"Mô phỏng từng năm theo giá hôm nay: chi tiêu theo lối sống, y tế tăng nhanh hơn lạm phát, trừ BHXH, lương hưu vợ/chồng, tiền thuê; quỹ cần có đủ chi đến tuổi dự trù; danh mục giảm dần cổ phiếu khi gần hưu.",
-   wen:"Year-by-year model in today's money: lifestyle spending, healthcare rising faster than inflation, less state and partner pensions and rent; the pot must last to the planning age; equities taper as retirement nears.",
+   wvi:"Tính từng năm theo giá hôm nay, trừ lương hưu và thu nhập khác. Quỹ phải đủ chi đến tuổi dự trù.",
+   wen:"Modelled year by year in today's money, less pensions and other income. The pot must last to the planning age.",
    fields:[
     {k:"bs",t:"bs"},
     {k:"retireAge",t:"num",vi:"Tuổi muốn nghỉ hưu",en:"Target retirement age",uvi:"tuổi",uen:"yrs"},
     {k:"retLife",t:"lifestyle",vi:"Lối sống khi nghỉ hưu",en:"Retirement lifestyle"},
-    {k:"retTarget",t:"num",vi:"Chi tiêu mong muốn khi hưu",en:"Target retirement spending",uvi:"tr ₫/tháng",uen:"VND m/mo",hvi:"Theo giá hôm nay; để trống sẽ theo lối sống",hen:"In today's money; blank uses the lifestyle level",sug:()=>{const c=eff(S.c); const I=n0(c.income)+n0(c.spouse)+n0(c.other); const t=RET_PCT[c.segment]||RET_PCT.massaff; return I? Math.round(I*t[LIFEI[c.retLife]??1]/100):null;}},
-    {k:"lifeExp",t:"num",vi:"Dự trù chi tiêu đến tuổi",en:"Plan spending to age",uvi:"tuổi",uen:"yrs",hvi:"Nên dự trù dài hơn tuổi thọ trung bình",hen:"Plan beyond average life expectancy"},
-    {k:"bhxhYears",t:"num",vi:"Số năm đóng BHXH đến lúc nghỉ",en:"Years of social insurance at retirement",uvi:"năm",uen:"yrs",when:c=>c.segment==="mass"||c.segment==="massaff"||c.work==="salaried",hvi:"Đủ 15 năm có lương hưu, nhận từ tuổi nghỉ hưu luật định",hen:"15 years earns a pension, paid from statutory retirement age"},
+    {k:"retTarget",t:"num",vi:"Chi tiêu mong muốn khi hưu",en:"Target retirement spending",uvi:"tr ₫/tháng",uen:"VND m/mo",hvi:"Giá hôm nay",hen:"Today's money",sug:()=>{const c=eff(S.c); const I=n0(c.income)+n0(c.spouse)+n0(c.other); const t=RET_PCT[c.segment]||RET_PCT.massaff; return I? Math.round(I*t[LIFEI[c.retLife]??1]/100):null;}},
+    {k:"lifeExp",t:"num",vi:"Dự trù chi tiêu đến tuổi",en:"Plan spending to age",uvi:"tuổi",uen:"yrs"},
+    {k:"bhxhYears",t:"num",vi:"Số năm đóng BHXH đến lúc nghỉ",en:"Years of social insurance at retirement",uvi:"năm",uen:"yrs",when:c=>c.segment==="mass"||c.segment==="massaff"||c.work==="salaried",hvi:"Đủ 15 năm có lương hưu",hen:"15 years earns a pension"},
     {k:"spousePension",t:"num",vi:"Lương hưu dự kiến của vợ/chồng",en:"Partner's expected pension",uvi:"tr ₫/tháng",uen:"VND m/mo",when:c=>n0(c.spouse)>0||c.family==="couple"||c.family==="kids",hvi:"Để 0 nếu không có",hen:"Leave 0 if none"},
-    {k:"retOther",t:"num",vi:"Thu nhập khác khi hưu",en:"Other retirement income",uvi:"tr ₫/tháng",uen:"VND m/mo",seg:["aff","hnw"],hvi:"Cổ tức doanh nghiệp, tiền thuê chưa khai",hen:"Business dividends, rent not listed above"},
-    {k:"retLump",t:"num",vi:"Khoản chi lớn sau hưu",en:"Large costs after retiring",uvi:"tr ₫",uen:"VND m",hvi:"Du lịch, cưới con, sửa nhà, xe",hen:"Travel, children's weddings, home repairs, car"},
+    {k:"retOther",t:"num",vi:"Thu nhập khác khi hưu",en:"Other retirement income",uvi:"tr ₫/tháng",uen:"VND m/mo",seg:["aff","hnw"],hvi:"Cổ tức, tiền thuê khác",hen:"Dividends, other rent"},
+    {k:"retLump",t:"num",vi:"Khoản chi lớn sau hưu",en:"Large costs after retiring",uvi:"tr ₫",uen:"VND m",hvi:"Du lịch, cưới con, sửa nhà",hen:"Travel, weddings, repairs"},
     {k:"risk",t:"choice",vi:"Nếu danh mục giảm 20% trong một năm, anh/chị sẽ…",en:"If the portfolio fell 20% in a year, you would…",opts:[opt("conservative","Bán bớt để giữ an toàn","Sell to stay safe"),opt("balanced","Giữ nguyên, chờ hồi phục","Hold and wait"),opt("growth","Mua thêm","Buy more")]},
    ]},
   {id:"protect", icon:"protect", pillar:"protect", vi:"Bảo vệ", en:"Protect",
@@ -1357,7 +1357,7 @@ function insightHTML(st){
     spend:[L("Tỷ lệ chi ra / thu vào","Outflow / income"), pct((m.exp+m.pay)/m.I), L("Chuẩn khoẻ mạnh ≤ 80% (gồm trả nợ).","Healthy is ≤ 80% including debt payments."), L("“Khoản chi nào anh/chị thấy đáng giá nhất, khoản nào có thể cắt mà không tiếc?”","“Which spending feels most worth it, and what could go without regret?”"), (m.exp+m.pay)/m.I<=.8],
     save:[L("Quỹ dự phòng","Emergency fund"), fmtMo(m.efMonths)+L(" tháng"," months"), L(`Mục tiêu ${m.efTarget} tháng chi phí thiết yếu + trả nợ.`,`Target ${m.efTarget} months of essentials plus debt payments.`), L("“Lần gần nhất có khoản chi bất ngờ, anh/chị đã xoay xở thế nào?”","“Last time an unexpected bill came up, how did you handle it?”"), m.efMonths>=m.efTarget],
     borrow:[L("Tỷ lệ trả nợ (DSR)","Debt service (DSR)"), pct(m.dsr), L("Chuẩn ≤ 35%; nợ lãi cao cần xử lý trước.","Keep ≤ 35%; clear high-interest debt first."), L("“Khoản vay nào đang làm anh/chị bận tâm nhất?”","“Which loan worries you the most?”"), m.dsr<=.35 && !n0(ce.highInt)],
-    invest: m.rp&&!m.rp.retired? [L("Mức sẵn sàng hưu trí","Retirement readiness"), pct(Math.min(9.99,m.rp.b.funded)), L(`Cần ${fmtM(m.corpus)} lúc ${m.rp.ret} tuổi, dự phóng ${fmtM(m.projected)}${m.rp.b.depl?`, đủ chi đến ${m.rp.b.depl} tuổi`:""}.`,`Needs ${fmtM(m.corpus)} at ${m.rp.ret}, projected ${fmtM(m.projected)}${m.rp.b.depl?`, lasting to age ${m.rp.b.depl}`:""}.`), L("“Một ngày bình thường khi nghỉ hưu của anh/chị trông thế nào, và ai sẽ chăm sóc khi về già?”","“What does an ordinary retirement day look like, and who will care for you later on?”"), m.rp.b.funded>=1] :
+    invest: m.rp&&!m.rp.retired? [L("Mức sẵn sàng hưu trí","Retirement readiness"), pct(Math.min(9.99,m.rp.b.funded)), `${fmtM(m.projected)} / ${fmtM(m.corpus)}${m.rp.b.depl?` · ${L("đủ đến","lasts to")} ${m.rp.b.depl}`:""}`, L("“Khi nghỉ hưu, một ngày của anh/chị sẽ thế nào?”","“What will a normal retirement day look like?”"), m.rp.b.funded>=1] :
     [L("Chỉ số tích luỹ tài sản","Wealth accumulation index"), fmtD(fh.wi,2)+"×", L(`${L(wealthBand(fh.wi).vi,wealthBand(fh.wi).en)} · chuẩn = tuổi × thu nhập năm ÷ 10.`,`${wealthBand(fh.wi).en} · benchmark = age × annual income ÷ 10.`), L("“Anh/chị hình dung cuộc sống lúc nghỉ hưu ra sao, cần khoảng bao nhiêu mỗi tháng?”","“What does retirement look like for you, and what would it cost each month?”"), fh.wi>=1],
     protect:[L("Mức bảo vệ nhân thọ","Life cover vs need"), pct(Math.min(9.99,n0(ce.lifeCover)/Math.max(1,m.lifeNeed))), L(`Nhu cầu ≈ ${fmtM(m.lifeNeed)}: chi tiêu gia đình đến khi con tự lập, cộng nợ và học phí, trừ tài sản sẵn có.`,`Need ≈ ${fmtM(m.lifeNeed)}: family spending until the children are independent, plus debts and school fees, less existing assets.`), L("“Nếu chuyện không may xảy ra, anh/chị muốn các con vẫn giữ được điều gì?”","“If the worst happened, what would you want the children to keep?”"), m.lifeGap<=0],
   }[st.pillar];
@@ -1728,7 +1728,7 @@ function retChart(rp){
    <text x="${xr}" y="${pt-8}" font-size="9" fill="var(--whiskey)" text-anchor="middle">${L("Hưu","Retire")} ${rp.ret}</text>
    ${ticks.map(a=>`<text x="${X(a)}" y="${H-6}" font-size="9" fill="var(--mute)" text-anchor="middle">${a}</text>`).join("")}
    ${rp.b.depl&&rp.b.depl<=a1?`<circle cx="${X(rp.b.depl)}" cy="${H-pb}" r="3" fill="#ED1B2E"/>`:""}
-  </svg><div class="legend"><span><i style="background:#ED1B2E"></i>${L("Cơ sở","Base")}</span><span><i style="background:rgba(69,85,96,.25)"></i>${L("Thận trọng – thuận lợi","Cautious to favourable")}</span><span><i style="background:var(--riverbed)"></i>${L("Quỹ cần có","Pot needed")}</span></div>`;
+  </svg><div class="legend"><span><i style="background:#ED1B2E"></i>${L("Cơ sở","Base")}</span><span><i style="background:rgba(69,85,96,.25)"></i>${L("Dải kịch bản","Range")}</span><span><i style="background:var(--riverbed)"></i>${L("Quỹ cần có","Pot needed")}</span></div>`;
 }
 function retireHTML(r){
   const m=r.m, rp=m.rp, ce=r.ce; if(!rp) return "";
@@ -1739,15 +1739,15 @@ function retireHTML(r){
     return head+`<div class="vitals"><div class="vital"><span class="eyebrow">${L("Quỹ hiện có","Pot today")}</span><b class="num">${fmtM(b.atRet)}</b></div>
      <div class="vital"><span class="eyebrow">${L("Rút ròng","Net draw")}</span><b class="num">${fmtM1(rp.netDraw)}</b><span>${L("mỗi tháng","a month")}</span></div>
      <div class="vital"><span class="eyebrow">${L("Đủ chi đến","Lasts to")}</span><b class="num" style="color:${col(b.depl&&b.depl<rp.life?.5:1)}">${lastTo(b)}</b><small>${L("Dự trù","Plan")} ${rp.life}</small></div></div>
-     <p class="note" style="margin-top:8px">${L(`Mức rút bền vững đến ${rp.life} tuổi ~${fmtM1(rp.sustain)}/tháng ngoài thu nhập hiện có.`,`Sustainable draw to age ${rp.life}: ~${fmtM1(rp.sustain)}/month on top of current income.`)}</p>`; }
+     <p class="note" style="margin-top:8px">${L(`Rút an toàn ~${fmtM1(rp.sustain)}/tháng`,`Safe draw ~${fmtM1(rp.sustain)}/month`)}</p>`; }
   const b=rp.b, d0=b.draw(rp.ret), fundedTxt=pct(Math.min(9.99,b.funded));
   const tr=(l,v,cls)=>`<tr${cls?` class="${cls}"`:""}><td>${l}</td><td class="v num">${v}</td></tr>`;
-  const flows=[tr(L("Chi tiêu","Spending"),fmtM1(d0.sp)),tr(L("trong đó y tế","of which healthcare"),fmtM1(d0.med),"sub")]
-    .concat(m.pension?[tr(L(`BHXH (${m.bhxhYrs} năm, từ ${rp.pAge} tuổi)`,`State pension (${m.bhxhYrs} yrs, from ${rp.pAge})`),"− "+fmtM1(m.pension))]:[])
+  const flows=[tr(L("Chi tiêu","Spending"),fmtM1(d0.sp)),tr(L("gồm y tế","incl. health"),fmtM1(d0.med),"sub")]
+    .concat(m.pension?[tr(L(`BHXH từ ${rp.pAge} tuổi`,`Pension from ${rp.pAge}`),"− "+fmtM1(m.pension))]:[])
     .concat(m.spPension?[tr(L("Lương hưu vợ/chồng","Partner's pension"),"− "+fmtM1(m.spPension))]:[])
     .concat(m.rentInc?[tr(L("Tiền thuê","Rent"),"− "+fmtM1(m.rentInc))]:[])
     .concat(m.retOther?[tr(L("Thu nhập khác","Other income"),"− "+fmtM1(m.retOther))]:[])
-    .concat(rp.pAge>rp.ret&&(m.pension||m.spPension)? [tr(L(`Rút từ quỹ đến ${rp.pAge} tuổi`,`Drawn from the pot until ${rp.pAge}`),fmtM1(d0.net),"tot"),tr(L(`Từ ${rp.pAge} tuổi, khi có lương hưu`,`From ${rp.pAge}, once pensions start`),fmtM1(b.draw(rp.pAge).net),"tot2")] : [tr(L("Rút từ quỹ","Drawn from the pot"),fmtM1(d0.net),"tot")]).join("");
+    .concat(rp.pAge>rp.ret&&(m.pension||m.spPension)? [tr(L(`Rút từ quỹ, trước ${rp.pAge}`,`From the pot, before ${rp.pAge}`),fmtM1(d0.net),"tot"),tr(L(`Rút từ quỹ, từ ${rp.pAge}`,`From the pot, from ${rp.pAge}`),fmtM1(b.draw(rp.pAge).net),"tot2")] : [tr(L("Rút từ quỹ","Drawn from the pot"),fmtM1(d0.net),"tot")]).join("");
   const sc=[[L("Thận trọng","Cautious"),rp.cons],[L("Cơ sở","Base"),b],[L("Thuận lợi","Favourable"),rp.opt]]
     .map(([l,x])=>`<tr><td>${l}</td><td class="v num">${fmtM(x.atRet)}</td><td class="v num" style="color:${col(x.funded)}">${pct(Math.min(9.99,x.funded))}</td><td class="v num">${lastTo(x)}</td></tr>`).join("");
   const lev=[]; if(rp.extra) lev.push([L(`Góp thêm ${fmtM1(rp.extra)}/tháng`,`Add ${fmtM1(rp.extra)} a month`),rp.extraFunded]);
@@ -1761,8 +1761,8 @@ function retireHTML(r){
     return `<tr><td class="num">${a}</td><td class="v num">${fmtM(p.b)}</td><td class="v num">${fmtM(q?q.b:p.b)}</td><td class="v num">${Math.round(p.eq*100)}%</td></tr>`; }).join("");
   const y1=d0.net*12, pot=b.atRet, k1=Math.min(pot,2*y1), k2=Math.min(pot-k1,6*y1), k3=Math.max(0,pot-k1-k2), kt=Math.max(1,pot);
   const bucket=`<div class="bk"><i style="width:${k1/kt*100}%;background:var(--ok)"></i><i style="width:${k2/kt*100}%;background:var(--riverbed-hi)"></i><i style="width:${k3/kt*100}%;background:#ED1B2E"></i></div>
-    <div class="bkl"><span><i style="background:var(--ok)"></i>${L("Tiền mặt 2 năm","Cash, 2 years")} <b class="num">${fmtM(k1)}</b></span><span><i style="background:var(--riverbed-hi)"></i>${L("Trái phiếu năm 3–8","Bonds, years 3–8")} <b class="num">${fmtM(k2)}</b></span><span><i style="background:#ED1B2E"></i>${L("Tăng trưởng","Growth")} <b class="num">${fmtM(k3)}</b></span></div>`;
-  const vpf = rp.marg>0? `<div class="vpf">${Ii("protect",16)}<span>${L(`Quỹ hưu trí tự nguyện: khấu trừ thuế TNCN đến ${VPF_CAP} tr/tháng, tiết kiệm ~${fmtM1(rp.vpfTax)}/năm ở bậc thuế ${Math.round(rp.marg*100)}%.`,`Voluntary pension fund: PIT deduction up to VND ${VPF_CAP}m a month, saving ~${fmtM1(rp.vpfTax)} a year at the ${Math.round(rp.marg*100)}% band.`)}</span></div>`:"";
+    <div class="bkl"><span><i style="background:var(--ok)"></i>${L("Tiền mặt","Cash")} <b class="num">${fmtM(k1)}</b></span><span><i style="background:var(--riverbed-hi)"></i>${L("Trái phiếu","Bonds")} <b class="num">${fmtM(k2)}</b></span><span><i style="background:#ED1B2E"></i>${L("Tăng trưởng","Growth")} <b class="num">${fmtM(k3)}</b></span></div>`;
+  const vpf = rp.marg>0? `<div class="vpf">${Ii("protect",16)}<span>${L(`Quỹ hưu trí tự nguyện: giảm thuế ~${fmtM1(rp.vpfTax)}/năm`,`Voluntary pension fund: ~${fmtM1(rp.vpfTax)} tax saved a year`)}</span></div>`:"";
   return head+`<div class="retire">
    <div class="vitals">
     <div class="vital"><span class="eyebrow">${L("Mức sẵn sàng","Readiness")}</span><b class="num" style="color:${col(b.funded)}">${fundedTxt}</b><span>${fmtM(b.atRet)} / ${fmtM(b.need)}</span></div>
@@ -1770,18 +1770,18 @@ function retireHTML(r){
     <div class="vital"><span class="eyebrow">${L("Cần góp thêm","Extra needed")}</span><b class="num">${m.reqMonthly>0?fmtM1(m.reqMonthly):L("Đủ","None")}</b><span>${m.reqMonthly>0?L("mỗi tháng","a month"):L("đúng lộ trình","on track")}</span></div>
    </div>
    ${retChart(rp)}
-   <h3 class="rh">${L("Cách đóng khoảng thiếu","Ways to close the gap")}</h3>${levH}
-   <h3 class="rh">${L(`Tháng đầu nghỉ hưu, tuổi ${rp.ret}`,`First month of retirement, age ${rp.ret}`)}</h3>
-   <table class="kpis rt"><tbody>${flows}</tbody></table>
-   <p class="note">${L(`Tương đương ${fmtM1(d0.sp*rp.inflF)}/tháng theo giá năm nghỉ hưu.`,`Equals ${fmtM1(d0.sp*rp.inflF)}/month in retirement-year prices.`)}${n0(ce.retLump)?L(` Cộng khoản chi lớn ${fmtM(ce.retLump)}.`,` Plus large costs of ${fmtM(ce.retLump)}.`):""}</p>
-   <h3 class="rh">${L("Kịch bản","Scenarios")}</h3>
-   <table class="kpis rt"><thead><tr><th></th><th style="text-align:right">${L("Quỹ lúc hưu","Pot at retirement")}</th><th style="text-align:right">${L("Đạt","Funded")}</th><th style="text-align:right">${L("Đủ đến","Lasts to")}</th></tr></thead><tbody>${sc}</tbody></table>
-   <details class="rmore"><summary>${L("Lộ trình tích luỹ & phân bổ","Milestones & allocation")}</summary>
-    <table class="kpis rt"><thead><tr><th>${L("Tuổi","Age")}</th><th style="text-align:right">${L("Dự phóng","Projected")}</th><th style="text-align:right">${L("Đúng lộ trình","On track")}</th><th style="text-align:right">${L("Cổ phiếu","Equity")}</th></tr></thead><tbody>${msRows}</tbody></table>
-    <h3 class="rh">${L("3 lớp dòng tiền khi nghỉ hưu","Three income layers at retirement")}</h3>${bucket}
+   <h3 class="rh">${L("Cách bù thiếu","Close the gap")}</h3>${levH}
+   <details class="rmore"><summary>${L("Chi tiết","Details")}</summary>
+    <h3 class="rh">${L(`Mỗi tháng khi hưu (${rp.ret} tuổi)`,`Monthly at ${rp.ret}`)}</h3>
+    <table class="kpis rt"><tbody>${flows}</tbody></table>
+    <h3 class="rh">${L("Kịch bản","Scenarios")}</h3>
+    <table class="kpis rt"><thead><tr><th></th><th style="text-align:right">${L("Quỹ","Pot")}</th><th style="text-align:right">${L("Đạt","Funded")}</th><th style="text-align:right">${L("Đủ đến","Lasts to")}</th></tr></thead><tbody>${sc}</tbody></table>
+    <h3 class="rh">${L("Lộ trình","Milestones")}</h3>
+    <table class="kpis rt"><thead><tr><th>${L("Tuổi","Age")}</th><th style="text-align:right">${L("Dự phóng","Projected")}</th><th style="text-align:right">${L("Mục tiêu","Target")}</th><th style="text-align:right">${L("Cổ phiếu","Equity")}</th></tr></thead><tbody>${msRows}</tbody></table>
+    <h3 class="rh">${L("Chia quỹ khi hưu","Pot at retirement")}</h3>${bucket}
    </details>
    ${vpf}
-   <p class="note" style="margin-top:10px">${L(`Giá hôm nay, lạm phát 4%. Chi tiêu ${m.retCustom?"theo mục tiêu khách":`${Math.round(m.retPct*100)}% thu nhập`}, giảm 10% sau 75 tuổi và 20% sau 85; y tế tăng nhanh hơn lạm phát 3%/năm. Cổ phiếu giảm dần 10 năm trước hưu; lợi suất sau hưu ${fmtD((nomEq(b.eqR))*100,1)}%/năm danh nghĩa. Thận trọng: lợi suất −2 điểm, sống thêm 5 năm.`,`Today's money, 4% inflation. Spending ${m.retCustom?"per client target":`${Math.round(m.retPct*100)}% of income`}, down 10% after 75 and 20% after 85; healthcare rises 3% a year above inflation. Equities taper over the last 10 years; post-retirement return ${fmtD((nomEq(b.eqR))*100,1)}% nominal. Cautious: returns −2 points, five more years of life.`)}</p>
+   <p class="note" style="margin-top:10px">${L(`Giá hôm nay · lạm phát 4% · y tế +3%/năm · BHXH từ ${PEN_AGE} tuổi`,`Today's money · 4% inflation · healthcare +3%/yr · state pension from ${PEN_AGE}`)}</p>
   </div>`;
 }
 
